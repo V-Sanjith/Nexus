@@ -3,7 +3,7 @@ name = "nexus-api"
 version = "0.1.0"
 description = "Nexus AI Decision Engine Backend API"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115.5",
     "uvicorn[standard]>=0.32.0",
