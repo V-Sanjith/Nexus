@@ -52,13 +52,12 @@ async def get_db_session() -> AsyncSession:
             raise
 
 async def init_db():
-    """Initializes the database schema if running in SQLite dev mode."""
+    """Initializes the database schema automatically on startup."""
     from app.models import Base
-    if settings.DATABASE_PROVIDER == "sqlite":
-        logger.info("Initializing SQLite database tables...")
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        logger.info("SQLite database tables initialized successfully.")
+    logger.info("Initializing database tables...")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    logger.info("Database tables initialized successfully.")
 
 # Helper to compute dynamic performance metrics for laptops based on CPU & GPU
 def get_laptop_performance_metrics(cpu: str, gpu: str, ram: int):
