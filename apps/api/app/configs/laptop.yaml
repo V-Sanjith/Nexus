@@ -1,0 +1,230 @@
+category: laptop
+display_name: "Laptops"
+description: "Find your perfect laptop match"
+
+keywords:
+  - laptop
+  - notebook
+  - macbook
+  - thinkpad
+  - chromebook
+  - ultrabook
+  - gaming laptop
+  - coding laptop
+  - programming laptop
+  - work laptop
+  - college laptop
+
+subcategories:
+  gaming:
+    keywords: [gaming, gamer, esports, fps, rgb, play games]
+    default_persona: gamer
+  ultrabook:
+    keywords: [ultrabook, thin, light, portable, travel, lightweight]
+    default_persona: traveller
+  business:
+    keywords: [business, enterprise, corporate, office, work, professional]
+    default_persona: business_user
+  student:
+    keywords: [student, college, university, school, education, budget, affordable, cheap]
+    default_persona: student
+  creator:
+    keywords: [creator, video editing, content creation, design, creative, editing, youtube]
+    default_persona: video_editor
+  programming:
+    keywords: [developer, programming, coding, software, engineer, devops, web dev]
+    default_persona: developer
+
+attributes:
+  - key: price
+    name: Price
+    type: cost
+    is_hard_filter: true
+  - key: ram_gb
+    name: RAM
+    type: benefit
+    is_hard_filter: true
+  - key: storage_gb
+    name: Storage
+    type: benefit
+    is_hard_filter: true
+  - key: weight_kg
+    name: Weight
+    type: cost
+    is_hard_filter: false
+  - key: battery_hours
+    name: Battery Life
+    type: benefit
+    is_hard_filter: false
+  - key: cpu_score
+    name: CPU Speed
+    type: benefit
+    is_hard_filter: false
+  - key: gpu_score
+    name: Graphics Speed
+    type: benefit
+    is_hard_filter: false
+
+personas:
+  gamer:
+    gpu_score: 2.2
+    cpu_score: 1.5
+    weight_kg: 0.8
+  developer:
+    cpu_score: 2.0
+    ram_gb: 1.8
+    storage_gb: 1.4
+  video_editor:
+    cpu_score: 1.8
+    gpu_score: 1.6
+    ram_gb: 1.6
+    storage_gb: 1.5
+  traveller:
+    weight_kg: 2.5
+    battery_hours: 2.0
+  student:
+    price: 2.0
+    battery_hours: 1.4
+  business_user:
+    battery_hours: 1.8
+    weight_kg: 1.4
+    cpu_score: 1.2
+  general: {}
+
+questions:
+  - order_index: 1
+    question_text: "What is your maximum budget?"
+    input_type: budget_range
+    options:
+      min: 300
+      max: 5000
+      step: 100
+      default: 1500
+    inr_options:
+      min: 30000
+      max: 500000
+      step: 10000
+      default: 150000
+    maps_to: price
+  - order_index: 2
+    question_text: "What is your minimum memory (RAM) requirement?"
+    input_type: single_choice
+    options:
+      choices: [8, 16, 32, 64]
+      default: 16
+      unit: "GB"
+    maps_to: ram_gb
+  - order_index: 3
+    question_text: "What is your minimum storage space requirement?"
+    input_type: single_choice
+    options:
+      choices: [256, 512, 1024, 2048]
+      default: 512
+      unit: "GB SSD"
+    maps_to: storage_gb
+  - order_index: 4
+    question_text: "How important is Portability (weight)?"
+    input_type: slider
+    options: {min: 0, max: 5, step: 1, default: 3}
+    maps_to: weight_kg
+  - order_index: 5
+    question_text: "How important is Battery Life (runtime)?"
+    input_type: slider
+    options: {min: 0, max: 5, step: 1, default: 3}
+    maps_to: battery_hours
+  - order_index: 6
+    question_text: "How important is CPU/Processing performance?"
+    input_type: slider
+    options: {min: 0, max: 5, step: 1, default: 3}
+    maps_to: cpu_score
+  - order_index: 7
+    question_text: "How important is GPU/Gaming/Graphics performance?"
+    input_type: slider
+    options: {min: 0, max: 5, step: 1, default: 3}
+    maps_to: gpu_score
+
+display_specs:
+  - key: cpu_model
+    label: "Processor"
+    unit: ""
+  - key: gpu_name
+    label: "Graphics"
+    unit: ""
+  - key: ram_gb
+    label: "Memory (RAM)"
+    unit: "GB"
+  - key: storage_gb
+    label: "Storage"
+    unit: "GB SSD"
+  - key: battery_hours
+    label: "Battery Life"
+    unit: "Hours"
+  - key: weight_kg
+    label: "Weight"
+    unit: "kg"
+  - key: cpu_score
+    label: "CPU Score"
+    unit: "pts"
+  - key: gpu_score
+    label: "GPU Score"
+    unit: "pts"
+  - key: screen_size
+    label: "Screen Size"
+    unit: "\""
+
+
+similarity_keys:
+  spec_keys: [weight_kg, battery_hours, cpu_score, gpu_score]
+  use_case_key: laptop_type
+
+tradeoff_comparisons:
+  - key: ram_gb
+    name: RAM
+    type: benefit
+    unit: GB
+    format_int: true
+  - key: storage_gb
+    name: Storage
+    type: benefit
+    unit: GB
+    format_int: true
+  - key: weight_kg
+    name: Weight
+    type: cost
+    unit: kg
+    precision: 2
+  - key: battery_hours
+    name: Battery Life
+    type: benefit
+    unit: hours
+    precision: 1
+  - key: cpu_score
+    name: CPU Speed
+    type: benefit
+    unit: points
+    format_int: true
+  - key: gpu_score
+    name: Graphics Speed
+    type: benefit
+    unit: points
+    format_int: true
+
+fallback:
+  max_results: 10
+  constraints:
+    price:
+      tolerance: 0.20
+      weight: 0.40
+    ram_gb:
+      tolerance: 0.50
+      weight: 0.20
+    storage_gb:
+      tolerance: 0.50
+      weight: 0.15
+    refresh_rate_hz:
+      tolerance: 0.60
+      weight: 0.15
+    battery_hours:
+      tolerance: 0.50
+      weight: 0.10
+

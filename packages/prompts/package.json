@@ -1,0 +1,10 @@
+{
+  "name": "@nexus/prompts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI prompt templates shared across engines",
+  "main": "index.js",
+  "files": [
+    "templates"
+  ]
+}

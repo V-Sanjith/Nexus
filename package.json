@@ -1,0 +1,55 @@
+{
+  "name": "nexus-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Nexus AI Decision Engine Workspace Orchestrator",
+  "author": "Nexus Team <engineering@nexus.ai>",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nexus-ai/nexus.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nexus-ai/nexus/issues"
+  },
+  "homepage": "https://github.com/nexus-ai/nexus#readme",
+  "keywords": [
+    "nexus",
+    "decision-engine",
+    "ai",
+    "monorepo"
+  ],
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "volta": {
+    "node": "20.15.0",
+    "pnpm": "9.1.4"
+  },
+  "packageManager": "pnpm@9.1.4",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format:check": "prettier --check .",
+    "format:write": "prettier --write .",
+    "prepare": "husky",
+    "infra:up": "docker compose -f docker-compose.yml up -d",
+    "infra:down": "docker compose -f docker-compose.yml down",
+    "infra:logs": "docker compose -f docker-compose.yml logs -f",
+    "db:migrate": "pnpm --filter @nexus/api db:migrate",
+    "db:rollback": "pnpm --filter @nexus/api db:rollback",
+    "db:seed": "pnpm --filter @nexus/api db:seed",
+    "clean": "turbo run clean && rimraf node_modules **/node_modules **/dist **/.next"
+  },
+  "devDependencies": {
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.5",
+    "prettier": "^3.2.5",
+    "rimraf": "^5.0.7",
+    "turbo": "^2.0.4"
+  }
+}

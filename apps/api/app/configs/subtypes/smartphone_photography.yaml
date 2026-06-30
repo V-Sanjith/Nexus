@@ -1,0 +1,64 @@
+subtype: photography
+category: smartphone
+display_name: "Camera & Photography Phones"
+description: "Smartphones designed for mobile photography, vloggers, and content creation."
+default_persona: photographer
+
+# Step 3: Catalog pre-filtering rules
+catalog_filters: {}
+
+# Step 4: Dynamic conditional questions
+questions:
+  - order_index: 1
+    question_text: "What is your maximum budget for a camera smartphone?"
+    input_type: budget_range
+    options:
+      min: 400
+      max: 2000
+      step: 50
+      default: 900
+    inr_options:
+      min: 30000
+      max: 200000
+      step: 5000
+      default: 75000
+    maps_to: price
+  - order_index: 2
+    question_text: "Do you require high camera resolution (48MP+)?"
+    input_type: single_choice
+    options:
+      choices: ["Yes", "No"]
+      default: "Yes"
+    maps_to: need_high_res
+  - order_index: 3
+    question_text: "What is your minimum storage requirement for storing photos/videos?"
+    input_type: single_choice
+    options:
+      choices: [128, 256, 512, 1024]
+      default: 256
+      unit: "GB"
+    maps_to: storage_gb
+  - order_index: 4
+    question_text: "How important is Camera megapixels and optical sensor quality?"
+    input_type: slider
+    options:
+      min: 0
+      max: 5
+      step: 1
+      default: 5
+      depends_on:
+        maps_to: need_high_res
+        value: "Yes"
+    maps_to: camera_mp
+  - order_index: 5
+    question_text: "How important is screen size and screen quality to review shots?"
+    input_type: slider
+    options:
+      min: 0
+      max: 5
+      step: 1
+      default: 3
+    maps_to: screen_size
+
+# Step 6: Strict compatibility rules
+compatibility_rules: {}

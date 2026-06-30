@@ -1,0 +1,219 @@
+category: smartphone
+display_name: "Smartphones"
+description: "Find your ideal smartphone"
+
+keywords:
+  - phone
+  - smartphone
+  - iphone
+  - android
+  - samsung
+  - galaxy
+  - pixel
+  - oneplus
+  - nothing phone
+  - mobile
+  - cell phone
+  - xiaomi
+  - motorola
+
+subcategories:
+  photography:
+    keywords: [camera, photography, photos, portrait, video, vlog, instagram]
+    default_persona: photographer
+  gaming:
+    keywords: [gaming, gamer, pubg, cod, mobile gaming, fps]
+    default_persona: gamer
+  flagship:
+    keywords: [flagship, premium, best, top, pro, ultra, max]
+    default_persona: professional
+  budget:
+    keywords: [budget, affordable, cheap, value, under, basic]
+    default_persona: student
+  professional:
+    keywords: [business, professional, enterprise, work, office, productivity]
+    default_persona: professional
+
+attributes:
+  - key: price
+    name: Price
+    type: cost
+    is_hard_filter: true
+  - key: camera_mp
+    name: Camera
+    type: benefit
+    is_hard_filter: false
+  - key: battery_mah
+    name: Battery
+    type: benefit
+    is_hard_filter: false
+  - key: screen_size
+    name: Screen Size
+    type: benefit
+    is_hard_filter: false
+  - key: storage_gb
+    name: Storage
+    type: benefit
+    is_hard_filter: true
+  - key: ram_gb
+    name: RAM
+    type: benefit
+    is_hard_filter: true
+  - key: processor_score
+    name: Processor
+    type: benefit
+    is_hard_filter: false
+
+personas:
+  photographer:
+    camera_mp: 2.5
+    storage_gb: 1.4
+    screen_size: 1.2
+  gamer:
+    processor_score: 2.2
+    ram_gb: 1.5
+    battery_mah: 1.3
+    screen_size: 1.2
+  professional:
+    processor_score: 1.8
+    ram_gb: 1.6
+    storage_gb: 1.4
+    battery_mah: 1.2
+  student:
+    price: 2.0
+    battery_mah: 1.4
+  general: {}
+
+questions:
+  - order_index: 1
+    question_text: "What is your maximum budget for a smartphone?"
+    input_type: budget_range
+    options:
+      min: 200
+      max: 2000
+      step: 50
+      default: 800
+    inr_options:
+      min: 15000
+      max: 200000
+      step: 5000
+      default: 60000
+    maps_to: price
+  - order_index: 2
+    question_text: "How important is Camera quality?"
+    input_type: slider
+    options: {min: 0, max: 5, step: 1, default: 3}
+    maps_to: camera_mp
+  - order_index: 3
+    question_text: "How important is Battery life?"
+    input_type: slider
+    options: {min: 0, max: 5, step: 1, default: 3}
+    maps_to: battery_mah
+  - order_index: 4
+    question_text: "What screen size do you prefer?"
+    input_type: single_choice
+    options:
+      choices: [6.1, 6.4, 6.7, 6.9]
+      default: 6.4
+      unit: "\""
+    maps_to: screen_size
+  - order_index: 5
+    question_text: "What is your minimum storage requirement?"
+    input_type: single_choice
+    options:
+      choices: [64, 128, 256, 512]
+      default: 128
+      unit: "GB"
+    maps_to: storage_gb
+  - order_index: 6
+    question_text: "What is your minimum RAM requirement?"
+    input_type: single_choice
+    options:
+      choices: [4, 6, 8, 12]
+      default: 8
+      unit: "GB"
+    maps_to: ram_gb
+  - order_index: 7
+    question_text: "How important is Gaming/Processing performance?"
+    input_type: slider
+    options: {min: 0, max: 5, step: 1, default: 3}
+    maps_to: processor_score
+
+display_specs:
+  - key: camera_mp
+    label: "Camera"
+    unit: "MP"
+  - key: battery_mah
+    label: "Battery"
+    unit: "mAh"
+  - key: screen_size
+    label: "Display"
+    unit: "\""
+  - key: storage_gb
+    label: "Storage"
+    unit: "GB"
+  - key: ram_gb
+    label: "RAM"
+    unit: "GB"
+  - key: processor_score
+    label: "Processor"
+    unit: "pts"
+  - key: brand
+    label: "Brand"
+    unit: ""
+
+similarity_keys:
+  spec_keys: [camera_mp, battery_mah, processor_score, screen_size]
+  use_case_key: phone_type
+
+tradeoff_comparisons:
+  - key: camera_mp
+    name: Camera
+    type: benefit
+    unit: MP
+    format_int: true
+  - key: battery_mah
+    name: Battery
+    type: benefit
+    unit: mAh
+    format_int: true
+  - key: screen_size
+    name: Screen Size
+    type: benefit
+    unit: "\""
+    precision: 1
+  - key: storage_gb
+    name: Storage
+    type: benefit
+    unit: GB
+    format_int: true
+  - key: ram_gb
+    name: RAM
+    type: benefit
+    unit: GB
+    format_int: true
+  - key: processor_score
+    name: Processor
+    type: benefit
+    unit: points
+    format_int: true
+
+fallback:
+  max_results: 10
+  constraints:
+    price:
+      tolerance: 0.20
+      weight: 0.40
+    ram_gb:
+      tolerance: 0.50
+      weight: 0.20
+    storage_gb:
+      tolerance: 0.50
+      weight: 0.15
+    camera_mp:
+      tolerance: 0.50
+      weight: 0.15
+    battery_mah:
+      tolerance: 0.30
+      weight: 0.10
+

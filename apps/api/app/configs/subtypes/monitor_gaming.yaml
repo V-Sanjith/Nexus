@@ -1,0 +1,57 @@
+subtype: gaming
+category: monitor
+display_name: "Gaming Monitors"
+description: "High refresh rate, low response-time monitors built for fast-paced gaming."
+default_persona: gamer
+
+# Step 3: Catalog pre-filtering rules
+catalog_filters:
+  gaming_suited: true
+
+# Step 4: Dynamic conditional questions
+questions:
+  - order_index: 1
+    question_text: "What is your maximum budget for a gaming monitor?"
+    input_type: budget_range
+    options:
+      min: 150
+      max: 3000
+      step: 50
+      default: 500
+    inr_options:
+      min: 12000
+      max: 250000
+      step: 10000
+      default: 45000
+    maps_to: price
+  - order_index: 2
+    question_text: "What is your minimum screen refresh rate for smooth gaming?"
+    input_type: single_choice
+    options:
+      choices: [120, 144, 240, 360]
+      default: 144
+      unit: "Hz"
+    maps_to: refresh_rate_hz
+  - order_index: 3
+    question_text: "How important is a curved panel or ultrawide aspect ratio?"
+    input_type: slider
+    options:
+      min: 0
+      max: 5
+      step: 1
+      default: 3
+    maps_to: design_score
+  - order_index: 4
+    question_text: "What is your minimum screen size preference?"
+    input_type: single_choice
+    options:
+      choices: [24, 27, 32, 34, 49]
+      default: 27
+      unit: "\""
+    maps_to: screen_size_inches
+
+# Step 6: Strict compatibility rules
+compatibility_rules:
+  refresh_rate_hz:
+    min: 120
+    reason: "requires at least 120Hz refresh rate to ensure smooth movement and low input latency in games"

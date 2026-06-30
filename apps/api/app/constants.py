@@ -1,0 +1,3 @@
+APP_NAME = "Nexus API"
+API_PREFIX = "/v1"
+CORRELATION_ID_HEADER = "X-Request-ID"

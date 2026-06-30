@@ -1,0 +1,49 @@
+subtype: foldable
+category: smartphone
+display_name: "Foldable Smartphones"
+description: "Cutting-edge foldable and flip smartphones featuring flexible multi-screen layouts."
+default_persona: professional
+
+# Step 3: Catalog pre-filtering rules
+catalog_filters:
+  is_foldable: true
+
+# Step 4: Dynamic conditional questions
+questions:
+  - order_index: 1
+    question_text: "What is your maximum budget for a foldable smartphone?"
+    input_type: budget_range
+    options:
+      min: 800
+      max: 3000
+      step: 100
+      default: 1500
+    inr_options:
+      min: 70000
+      max: 250000
+      step: 10000
+      default: 150000
+    maps_to: price
+  - order_index: 2
+    question_text: "How important is multitasking and multi-screen productivity?"
+    input_type: slider
+    options:
+      min: 0
+      max: 5
+      step: 1
+      default: 5
+    maps_to: productivity_score
+  - order_index: 3
+    question_text: "What is your preferred unfolded screen size?"
+    input_type: single_choice
+    options:
+      choices: [6.7, 7.6, 8.0]
+      default: 7.6
+      unit: "\""
+    maps_to: screen_size
+
+# Step 6: Strict compatibility rules
+compatibility_rules:
+  is_foldable:
+    eq: true
+    reason: "requires a foldable or flip-style screen mechanism"

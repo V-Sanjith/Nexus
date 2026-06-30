@@ -1,0 +1,14 @@
+name: student
+weights:
+  laptop:
+    price: 2.5
+    battery_hours: 1.8
+    weight_kg: 1.5
+    ram_gb: 1.0
+  smartphone:
+    price: 2.2
+    battery_mah: 1.6
+    screen_size: 1.0
+  monitor:
+    price: 2.5
+    screen_size_inches: 1.2

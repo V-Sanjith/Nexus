@@ -1,0 +1,56 @@
+subtype: designer
+category: monitor
+display_name: "Designer & Color-Accurate Monitors"
+description: "Professional monitors optimized for color accuracy, wide color gamut, and high resolutions."
+default_persona: designer
+
+# Step 3: Catalog pre-filtering rules
+catalog_filters:
+  color_accurate: true
+
+# Step 4: Dynamic conditional questions
+questions:
+  - order_index: 1
+    question_text: "What is your maximum budget for a designer monitor?"
+    input_type: budget_range
+    options:
+      min: 200
+      max: 3000
+      step: 50
+      default: 600
+    inr_options:
+      min: 15000
+      max: 250000
+      step: 10000
+      default: 50000
+    maps_to: price
+  - order_index: 2
+    question_text: "Do you require high color accuracy (Delta E < 2.0)?"
+    input_type: single_choice
+    options:
+      choices: ["Yes", "No"]
+      default: "Yes"
+    maps_to: need_color_accuracy
+  - order_index: 3
+    question_text: "What is your minimum screen resolution?"
+    input_type: single_choice
+    options:
+      choices: [1440, 2160]
+      default: 1440
+      unit: "p"
+    maps_to: resolution_p
+  - order_index: 4
+    question_text: "How important is Wide Color Gamut (AdobeRGB / DCI-P3) coverage?"
+    input_type: slider
+    options:
+      min: 0
+      max: 5
+      step: 1
+      default: 5
+      depends_on:
+        maps_to: need_color_accuracy
+        value: "Yes"
+    maps_to: color_accuracy_score
+
+# Step 6: Strict compatibility rules
+compatibility_rules: {}

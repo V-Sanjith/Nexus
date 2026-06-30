@@ -1,0 +1,54 @@
+subtype: productivity
+category: monitor
+display_name: "Productivity Monitors"
+description: "Monitors designed for office work, spreadsheets, multi-window multitasking, and coding."
+default_persona: developer
+
+# Step 3: Catalog pre-filtering rules
+catalog_filters: {}
+
+# Step 4: Dynamic conditional questions
+questions:
+  - order_index: 1
+    question_text: "What is your maximum budget for a productivity monitor?"
+    input_type: budget_range
+    options:
+      min: 100
+      max: 2500
+      step: 50
+      default: 300
+    inr_options:
+      min: 8000
+      max: 200000
+      step: 5000
+      default: 25000
+    maps_to: price
+  - order_index: 2
+    question_text: "What is your minimum screen size preference?"
+    input_type: single_choice
+    options:
+      choices: [27, 32, 34, 49]
+      default: 27
+      unit: "\""
+    maps_to: screen_size_inches
+  - order_index: 3
+    question_text: "How important is eye comfort and low blue light features?"
+    input_type: slider
+    options:
+      min: 0
+      max: 5
+      step: 1
+      default: 4
+    maps_to: eye_comfort_score
+  - order_index: 4
+    question_text: "How important is USB-C connectivity with power delivery?"
+    input_type: slider
+    options:
+      min: 0
+      max: 5
+      step: 1
+      default: 3
+    maps_to: connectivity_score
+
+# Step 6: Strict compatibility rules
+compatibility_rules: {}

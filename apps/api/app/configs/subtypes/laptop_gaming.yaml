@@ -1,0 +1,79 @@
+subtype: gaming
+category: laptop
+display_name: "Gaming Laptops"
+description: "High-performance laptops designed for gaming and graphic-intensive tasks."
+default_persona: gamer
+
+# Step 3: Catalog pre-filtering rules
+catalog_filters:
+  gpu_type: "dedicated"
+
+# Step 4: Dynamic conditional questions
+questions:
+  - order_index: 1
+    question_text: "What is your maximum budget for a gaming laptop?"
+    input_type: budget_range
+    options:
+      min: 600
+      max: 6000
+      step: 100
+      default: 2000
+    inr_options:
+      min: 50000
+      max: 500000
+      step: 10000
+      default: 180000
+    maps_to: price
+  - order_index: 2
+    question_text: "What level of graphics/gaming performance is your priority?"
+    input_type: slider
+    options:
+      min: 0
+      max: 5
+      step: 1
+      default: 4
+    maps_to: gpu_score
+  - order_index: 3
+    question_text: "What is your minimum screen refresh rate?"
+    input_type: single_choice
+    options:
+      choices: [60, 120, 144, 240, 360]
+      default: 144
+      unit: "Hz"
+    maps_to: refresh_rate_hz
+  - order_index: 4
+    question_text: "How important is cooling and thermal performance under heavy gaming load?"
+    input_type: slider
+    options:
+      min: 0
+      max: 5
+      step: 1
+      default: 4
+    maps_to: cooling_score
+  - order_index: 5
+    question_text: "How important is portability and lightweight chassis?"
+    input_type: slider
+    options:
+      min: 0
+      max: 5
+      step: 1
+      default: 2
+    maps_to: weight_kg
+  - order_index: 6
+    question_text: "How important is battery runtime for general office work?"
+    input_type: slider
+    options:
+      min: 0
+      max: 5
+      step: 1
+      default: 2
+    maps_to: battery_hours
+
+# Step 6: Strict compatibility rules
+compatibility_rules:
+  gpu_type:
+    eq: "dedicated"
+    reason: "requires a dedicated graphics card (GPU) for rendering AAA games"
+  refresh_rate_hz:
+    min: 120
+    reason: "requires a high refresh rate display (120Hz+) for fluid gameplay"

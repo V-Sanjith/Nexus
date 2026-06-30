@@ -1,0 +1,73 @@
+subtype: creator
+category: laptop
+display_name: "Content Creation Laptops"
+description: "Laptops designed for photo/video editing, 3D modeling, and creative tasks."
+default_persona: video_editor
+
+# Step 3: Catalog pre-filtering rules
+catalog_filters: {}
+
+# Step 4: Dynamic conditional questions
+questions:
+  - order_index: 1
+    question_text: "What is your maximum budget for a content creation laptop?"
+    input_type: budget_range
+    options:
+      min: 800
+      max: 6000
+      step: 100
+      default: 2500
+    inr_options:
+      min: 75000
+      max: 500000
+      step: 10000
+      default: 220000
+    maps_to: price
+  - order_index: 2
+    question_text: "Do you require high display color accuracy (e.g. for color grading)?"
+    input_type: single_choice
+    options:
+      choices: ["Yes", "No"]
+      default: "Yes"
+    maps_to: need_color_accuracy
+  - order_index: 3
+    question_text: "What is your minimum RAM requirement for editing projects?"
+    input_type: single_choice
+    options:
+      choices: [16, 32, 64]
+      default: 16
+      unit: "GB"
+    maps_to: ram_gb
+  - order_index: 4
+    question_text: "How important is color accuracy and wide color gamut (DCI-P3/AdobeRGB)?"
+    input_type: slider
+    options:
+      min: 0
+      max: 5
+      step: 1
+      default: 5
+      depends_on:
+        maps_to: need_color_accuracy
+        value: "Yes"
+    maps_to: color_accuracy_score
+  - order_index: 5
+    question_text: "How important is GPU performance for rendering and editing?"
+    input_type: slider
+    options:
+      min: 0
+      max: 5
+      step: 1
+      default: 4
+    maps_to: gpu_score
+  - order_index: 6
+    question_text: "How important is Display Brightness (nits) for outdoor editing?"
+    input_type: slider
+    options:
+      min: 0
+      max: 5
+      step: 1
+      default: 3
+    maps_to: brightness_nits
+
+# Step 6: Strict compatibility rules
+compatibility_rules: {}

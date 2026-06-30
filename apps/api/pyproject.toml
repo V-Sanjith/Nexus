@@ -1,0 +1,36 @@
+[project]
+name = "nexus-api"
+version = "0.1.0"
+description = "Nexus AI Decision Engine Backend API"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115.5",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic[email]>=2.9.2",
+    "pydantic-settings>=2.6.1",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "asyncpg>=0.30.0",
+    "alembic>=1.14.0",
+    "redis>=5.2.0",
+    "httpx>=0.27.2",
+    "python-dotenv>=1.0.1",
+    "pyyaml>=6.0.2",
+    "slowapi>=0.1.9",
+    "structlog>=24.4.0",
+    "opentelemetry-api>=1.27.0",
+    "opentelemetry-sdk>=1.27.0",
+    "opentelemetry-instrumentation-fastapi>=0.48b0",
+    "opentelemetry-instrumentation-sqlalchemy>=0.48b0",
+    "prometheus-client>=0.21.0",
+    "sentry-sdk[fastapi]>=2.18.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.3.3",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.7.4",
+    "mypy>=1.13.0",
+    "black>=24.10.0",
+]
