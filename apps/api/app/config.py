@@ -9,6 +9,12 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
+    def __init__(self, **values):
+        super().__init__(**values)
+        import os
+        if os.environ.get("VERCEL") == "1" and self.DATABASE_URL.startswith("sqlite"):
+            self.DATABASE_URL = "sqlite+aiosqlite:////tmp/nexus.db"
+
     ENV: str = Field(default="development")
     DEBUG: bool = Field(default=True)
     PORT: int = Field(default=8000)
