@@ -1,12 +1,13 @@
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from app.observability.config import obs_settings
 
 def configure_tracing():
     if not obs_settings.ENABLE_TELEMETRY:
         return
+
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 
     provider = TracerProvider()
     processor = BatchSpanProcessor(
