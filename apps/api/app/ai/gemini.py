@@ -16,8 +16,9 @@ class GeminiProvider(BaseLLMProvider):
         self.model = "gemini-2.5-flash"
 
     async def generate_json(self, system_instruction: str, prompt: str, schema: Any, enable_search: bool = False) -> Dict[str, Any]:
-        if not self.api_key:
-            logger.warning("GEMINI_API_KEY is not configured. Falling back to structural mock generator.")
+        is_valid_key = self.api_key and self.api_key.startswith("AIzaSy")
+        if not is_valid_key:
+            logger.warning("GEMINI_API_KEY is not configured or is invalid. Falling back to structural mock generator.")
             return self._generate_mock(prompt)
 
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"

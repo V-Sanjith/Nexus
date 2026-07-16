@@ -11,7 +11,7 @@ class CatalogProvider(ABC):
     """Abstract interface for all product search and spec retrieval providers."""
 
     @abstractmethod
-    async def get_products(self, category: str, query: Optional[str] = None) -> List[Product]:
+    async def get_products(self, category: str, query: Optional[str] = None, subtype: Optional[str] = None) -> List[Product]:
         """Retrieves active products in the category matching optional query criteria."""
         pass
 
@@ -22,9 +22,9 @@ class LocalCatalogProvider(CatalogProvider):
     def __init__(self, session: AsyncSession):
         self.repo = SQLAlchemyProductRepository(session)
 
-    async def get_products(self, category: str, query: Optional[str] = None) -> List[Product]:
-        logger.info("LocalCatalogProvider retrieving products", category=category)
-        products = await self.repo.get_by_category(category)
+    async def get_products(self, category: str, query: Optional[str] = None, subtype: Optional[str] = None) -> List[Product]:
+        logger.info("LocalCatalogProvider retrieving products", category=category, subtype=subtype)
+        products = await self.repo.get_by_category(category, limit=None, subtype=subtype)
         
         # Exclude blacklisted products (e.g., OnePlus Nord 4 as requested by the user because it is not available)
         blacklist = ["nord 4", "nord4", "nord-4"]

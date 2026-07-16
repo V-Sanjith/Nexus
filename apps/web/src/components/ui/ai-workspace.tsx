@@ -15,24 +15,23 @@ import { RecommendationStack } from './ai-workspace/recommendation-stack';
 interface AIWorkspaceProps {
   inputValue: string;
   isAnalyzing?: boolean;
+  detectedIntent?: any;
 }
 
 type ScanPhase = 'idle' | 'entering' | 'scanning' | 'scoring' | 'locked' | 'stacking';
 
-// Card orbit positions (non-overlapping, spread around the workspace)
-const ORBIT_POSITIONS = [
-  { x: 130, y: -80, depth: 0 },
-  { x: -90, y: -120, depth: 1 },
-  { x: 160, y: 60, depth: 1 },
-  { x: -150, y: 40, depth: 2 },
-  { x: 100, y: 130, depth: 0 },
-  { x: -60, y: 120, depth: 2 },
-  { x: 180, y: -30, depth: 1 },
-  { x: -140, y: -60, depth: 0 },
-  { x: 50, y: -140, depth: 2 },
-];
+// Generate 30 dynamic orbit positions for the Product Universe
+const ORBIT_POSITIONS = Array.from({ length: 30 }).map((_, i) => {
+  const angle = (i * 137.5) * (Math.PI / 180); // golden angle distribution
+  const radius = 100 + (i * 8); // spiral out
+  return {
+    x: Math.cos(angle) * radius,
+    y: Math.sin(angle) * radius,
+    depth: i % 4, // 0 to 3 for varied blur/scale
+  };
+});
 
-export function AIWorkspace({ inputValue, isAnalyzing = false }: AIWorkspaceProps) {
+export function AIWorkspace({ inputValue, isAnalyzing = false, detectedIntent }: AIWorkspaceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Core state
@@ -76,6 +75,18 @@ export function AIWorkspace({ inputValue, isAnalyzing = false }: AIWorkspaceProp
     if (!inputValue.trim()) {
       setFilteredProducts(PRODUCT_CATALOG);
       setStatusText('SYS_IDLE - MONITORING INTENT');
+      return;
+    }
+
+    if (detectedIntent) {
+      const cat = detectedIntent.category.toLowerCase();
+      let filtered = PRODUCT_CATALOG.filter((p) => p.category === cat);
+      if (filtered.length === 0) filtered = PRODUCT_CATALOG;
+      
+      setFilteredProducts(filtered);
+      setStatusText(`MATCHING CAT: ${cat.toUpperCase()} | EVALUATING SENSORS...`);
+      setActiveIndex(0);
+      setScanPhase('entering');
       return;
     }
 
@@ -198,9 +209,13 @@ export function AIWorkspace({ inputValue, isAnalyzing = false }: AIWorkspaceProp
   // Active product tags
   const activeTags = activeProduct?.tags || [];
 
-  // Non-active products for floating
-  const floatingProducts = filteredProducts.filter((_, i) => i !== activeIndex % filteredProducts.length);
-  const visibleFloaters = isMobile ? floatingProducts.slice(0, 3) : floatingProducts;
+  // Product Universe logic
+  // We duplicate the catalog to create a "universe" of products
+  const allProducts = Array.from({ length: 30 }).map((_, i) => PRODUCT_CATALOG[i % PRODUCT_CATALOG.length]);
+  
+  // Exclude the actively highlighted product from the floating background
+  const backgroundProducts = allProducts.filter((_, i) => i !== activeIndex % allProducts.length);
+  const visibleFloaters = isMobile ? backgroundProducts.slice(0, 10) : backgroundProducts;
 
   return (
     <div
@@ -270,14 +285,20 @@ export function AIWorkspace({ inputValue, isAnalyzing = false }: AIWorkspaceProp
         {/* Floating non-active cards */}
         {!isAnalyzing &&
           visibleFloaters.map((p, idx) => {
+            if (!p) return null;
             const orbit = ORBIT_POSITIONS[idx % ORBIT_POSITIONS.length];
             if (!orbit) return null;
+            
+            // Check if this product matches the current intent/filter
+            const isMatching = filteredProducts.some(fp => fp.id === p.id);
+            const isFaded = !isMatching && (inputValue.trim().length > 0 || detectedIntent);
 
             return (
               <ProductCard
-                key={p.id}
+                key={`${p.id}-${idx}`}
                 product={p}
                 isActive={false}
+                isFaded={isFaded}
                 depth={orbit.depth}
                 positionX={orbit.x}
                 positionY={orbit.y}

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Any
 from uuid import UUID
 from pydantic import BaseModel
 from app.schemas.product import ProductSchema
@@ -30,3 +30,15 @@ class RecommendationSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+class StatelessAnswerInput(BaseModel):
+    question_id: int
+    selected_value: Any
+
+class StatelessRecommendRequest(BaseModel):
+    category: str
+    subcategory: str = "general"
+    persona: str = "general"
+    currency: str = "inr"
+    answers: List[StatelessAnswerInput]
+

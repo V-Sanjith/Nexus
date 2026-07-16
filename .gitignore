@@ -118,3 +118,6 @@ temp/
 *.pdf
 scratch/
 !C:/Users/SANJITH/.gemini/antigravity/brain/9cf61332-3307-493c-afb3-03d10fae72e6/scratch/
+
+.vercel
+.env*

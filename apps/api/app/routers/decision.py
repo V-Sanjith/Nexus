@@ -9,14 +9,43 @@ from app.models.user import User
 from app.models.decision import Decision
 from app.models.question import Question
 from app.models.answer import Answer
-from app.schemas.decision import DecisionStartRequest, DecisionSchema
+from app.schemas.decision import DecisionStartRequest, DecisionSchema, IntentDetectRequest, IntentDetectResponse
 from app.schemas.answer import AnswerSubmitRequest
+from app.schemas.recommendation import StatelessRecommendRequest
 from app.services.recommendation_service import RecommendationService
 from app.services.category_registry import CategoryRegistry
 from app.ai.intent import IntentClassifier
 
 
 router = APIRouter(prefix="/api/decisions", tags=["Decisions"])
+
+@router.post("/detect-intent", response_model=IntentDetectResponse)
+async def detect_intent(payload: IntentDetectRequest):
+    """Instantly detects category, subcategory, persona, and question count for a search query."""
+    intent_classifier = IntentClassifier()
+    classification = await intent_classifier.classify(payload.query)
+    
+    registry = CategoryRegistry()
+    category = classification.category
+    
+    config = registry.get(category)
+    if not config:
+        available = registry.list_categories()
+        category = available[0]["key"] if available else "laptop"
+        
+    subcategory = classification.subcategory
+    persona = classification.persona
+    confidence = classification.confidence
+    
+    questions_tpl = registry.get_questions(category, subcategory=subcategory, currency="inr")
+    
+    return IntentDetectResponse(
+        category=category,
+        subcategory=subcategory,
+        persona=persona,
+        confidence=confidence,
+        questions_count=len(questions_tpl)
+    )
 
 @router.post("", response_model=DecisionSchema, status_code=status.HTTP_201_CREATED)
 async def start_decision(
@@ -177,7 +206,17 @@ async def run_recommendation(
             "decision_trace": recommendation.structured_analysis.get("decision_trace", {}),
             "display_specs": registry.get_display_specs(decision.category),
             "suggestions": recommendation.structured_analysis.get("suggestions", []),
-            "closest_matches": recommendation.structured_analysis.get("closest_matches", [])
+            "closest_matches": recommendation.structured_analysis.get("closest_matches", []),
+            "funnel_metrics": recommendation.structured_analysis.get("funnel_metrics"),
+            "confidence_breakdown": recommendation.structured_analysis.get("confidence_breakdown"),
+            "domain_scores": recommendation.structured_analysis.get("domain_scores"),
+            "component_percentiles": recommendation.structured_analysis.get("component_percentiles"),
+            "use_case_rank": recommendation.structured_analysis.get("use_case_rank"),
+            "user_preferences": recommendation.structured_analysis.get("user_preferences"),
+            "reliability_score": recommendation.structured_analysis.get("reliability_score"),
+            "reliability_reasons": recommendation.structured_analysis.get("reliability_reasons"),
+            "battle_comparison": recommendation.structured_analysis.get("battle_comparison"),
+            "upgrade_analysis": recommendation.structured_analysis.get("upgrade_analysis")
         }
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
@@ -229,7 +268,17 @@ async def get_decision_state(
             "decision_trace": rec.structured_analysis.get("decision_trace", {}),
             "display_specs": registry.get_display_specs(decision.category),
             "suggestions": rec.structured_analysis.get("suggestions", []),
-            "closest_matches": rec.structured_analysis.get("closest_matches", [])
+            "closest_matches": rec.structured_analysis.get("closest_matches", []),
+            "funnel_metrics": rec.structured_analysis.get("funnel_metrics"),
+            "confidence_breakdown": rec.structured_analysis.get("confidence_breakdown"),
+            "domain_scores": rec.structured_analysis.get("domain_scores"),
+            "component_percentiles": rec.structured_analysis.get("component_percentiles"),
+            "use_case_rank": rec.structured_analysis.get("use_case_rank"),
+            "user_preferences": rec.structured_analysis.get("user_preferences"),
+            "reliability_score": rec.structured_analysis.get("reliability_score"),
+            "reliability_reasons": rec.structured_analysis.get("reliability_reasons"),
+            "battle_comparison": rec.structured_analysis.get("battle_comparison"),
+            "upgrade_analysis": rec.structured_analysis.get("upgrade_analysis")
         }
     elif decision.status == "COMPLETE":
         try:
@@ -248,7 +297,17 @@ async def get_decision_state(
                 "decision_trace": rec.structured_analysis.get("decision_trace", {}),
                 "display_specs": registry.get_display_specs(decision.category),
                 "suggestions": rec.structured_analysis.get("suggestions", []),
-                "closest_matches": rec.structured_analysis.get("closest_matches", [])
+                "closest_matches": rec.structured_analysis.get("closest_matches", []),
+                "funnel_metrics": rec.structured_analysis.get("funnel_metrics"),
+                "confidence_breakdown": rec.structured_analysis.get("confidence_breakdown"),
+                "domain_scores": rec.structured_analysis.get("domain_scores"),
+                "component_percentiles": rec.structured_analysis.get("component_percentiles"),
+                "use_case_rank": rec.structured_analysis.get("use_case_rank"),
+                "user_preferences": rec.structured_analysis.get("user_preferences"),
+                "reliability_score": rec.structured_analysis.get("reliability_score"),
+                "reliability_reasons": rec.structured_analysis.get("reliability_reasons"),
+                "battle_comparison": rec.structured_analysis.get("battle_comparison"),
+                "upgrade_analysis": rec.structured_analysis.get("upgrade_analysis")
             }
         except Exception as e:
             import structlog
@@ -278,3 +337,104 @@ async def get_decision_state(
         ],
         "recommendation": recommendation_payload
     }
+
+
+@router.post("/recommend-stateless", status_code=status.HTTP_200_OK)
+async def run_recommendation_stateless(
+    payload: StatelessRecommendRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Executes Decision Engine math, triggers ExplanationBuilder, and yields structured recommendation without saving state."""
+    rec_service = RecommendationService(db)
+    try:
+        recommendation = await rec_service.generate_recommendation_stateless(payload)
+        
+        # Flatten and format response to match the stateful recommendation structure perfectly
+        registry = CategoryRegistry()
+        sa = recommendation["structured_analysis"]
+        vp = recommendation["verdict_product"]
+        
+        return {
+            "id": None,
+            "status": sa.get("decision_trace", {}).get("status", "success"),
+            "verdict_product": {
+                "id": vp["id"],
+                "sku": vp["sku"],
+                "name": vp["name"],
+                "price": float(sa.get("local_price", vp["price_inr"])),
+                "symbol": sa.get("local_symbol", "$"),
+                "currency": sa.get("local_currency", "usd"),
+                "specs": vp["specs"]
+            } if vp else None,
+            "score": float(recommendation["confidence_score"]),
+            "confidence": float(recommendation["confidence_score"]),
+            "pros": sa.get("pros", []),
+            "cons": sa.get("cons", []),
+            "tradeoffs": sa.get("tradeoffs", []),
+            "reasoning": sa.get("reasoning", ""),
+            "summary": sa.get("summary", ""),
+            "citations": sa.get("citations", []),
+            "decision_trace": sa.get("decision_trace", {}),
+            "display_specs": registry.get_display_specs(payload.category),
+            "suggestions": sa.get("suggestions", []),
+            "closest_matches": sa.get("closest_matches", []),
+            "funnel_metrics": sa.get("funnel_metrics"),
+            "confidence_breakdown": sa.get("confidence_breakdown"),
+            "domain_scores": sa.get("domain_scores"),
+            "component_percentiles": sa.get("component_percentiles"),
+            "use_case_rank": sa.get("use_case_rank"),
+            "user_preferences": sa.get("user_preferences"),
+            "reliability_score": sa.get("reliability_score"),
+            "reliability_reasons": sa.get("reliability_reasons"),
+            "battle_comparison": sa.get("battle_comparison"),
+            "upgrade_analysis": sa.get("upgrade_analysis")
+        }
+    except ValueError as ve:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
+    except Exception as e:
+        import structlog
+        structlog.get_logger().error("Stateless recommendation failed", error=str(e))
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.get("/intent", status_code=status.HTTP_200_OK)
+async def get_intent_parsing(q: str):
+    """Parses intent instantly for homepage search intelligence."""
+    if not q or len(q.strip()) < 3:
+        return {"category": None, "subcategory": None, "persona": None, "confidence": 0.0}
+    
+    from app.services.category_registry import CategoryRegistry
+    registry = CategoryRegistry()
+    
+    # Keyword matcher first
+    res = registry.match_keywords(q.lower().strip())
+    if res:
+        category, subcategory, persona = res
+        return {
+            "category": category,
+            "subcategory": subcategory,
+            "persona": persona,
+            "confidence": 98.0
+        }
+    
+    # Try calling the Gemini intent classifier if available
+    try:
+        from app.ai.intent import IntentClassifier
+        classifier = IntentClassifier(registry)
+        intent_res = await classifier.classify(q)
+        return {
+            "category": intent_res.category,
+            "subcategory": intent_res.subcategory,
+            "persona": intent_res.persona,
+            "confidence": intent_res.confidence
+        }
+    except Exception:
+        # Generic fallback
+        return {
+            "category": "laptop",
+            "subcategory": "general",
+            "persona": "general",
+            "confidence": 40.0
+        }
+
+

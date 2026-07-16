@@ -12,6 +12,8 @@ class IntentResult(BaseModel):
     confidence: float
     raw_title: str
     persona_weights: Optional[Dict[str, float]] = None
+# Module-level cache to share classifications across requests
+_intent_cache: Dict[str, IntentResult] = {}
 
 class IntentClassifier:
     """Keyword-first intent classifier with Gemini fallback for ambiguous inputs."""
@@ -23,33 +25,20 @@ class IntentClassifier:
         """
         Classify user input into category/subcategory/persona.
         Priority:
-        1) Keyword-first matching (fast, deterministic)
-        2) Gemini fallback (for ambiguous/complex inputs)
+        1) Cache lookup (extremely fast, prevents double API hits)
+        2) Keyword-first matching (fast, deterministic)
+        3) Gemini fallback (for ambiguous/complex inputs)
         """
         text = title.lower().strip()
         
-        # 1. Try keyword matching first
-        keyword_result = self.registry.match_keywords(text)
-        if keyword_result:
-            category, subcategory, persona = keyword_result
-            logger.info("Intent classified via keywords", 
-                        category=category, subcategory=subcategory, persona=persona)
-            return IntentResult(
-                category=category,
-                subcategory=subcategory,
-                persona=persona,
-                confidence=95.0,
-                raw_title=title,
-                persona_weights=None # Predefined persona will load weights from YAML
-            )
-        
-        # 2. Gemini fallback for ambiguous input
-        try:
-            return await self._classify_with_gemini(title)
-        except Exception as e:
-            logger.warning("Gemini classification failed, using default fallback", error=str(e))
-            # Ultimate fallback: laptop/general
-            return IntentResult(
+        # 1. Cache lookup
+        if text in _intent_cache:
+            logger.info("Intent classification cache HIT", query=text)
+            return _intent_cache[text]
+
+        # If too short, don't call Gemini - return fast fallback
+        if len(text) < 4:
+            result = IntentResult(
                 category="laptop",
                 subcategory="general",
                 persona="general",
@@ -57,6 +46,44 @@ class IntentClassifier:
                 raw_title=title,
                 persona_weights=None
             )
+            _intent_cache[text] = result
+            return result
+
+        # 2. Try keyword matching first (DISABLED for better NLP accuracy)
+        # keyword_result = self.registry.match_keywords(text)
+        # if keyword_result:
+        #     category, subcategory, persona = keyword_result
+        #     logger.info("Intent classified via keywords", 
+        #                 category=category, subcategory=subcategory, persona=persona)
+        #     result = IntentResult(
+        #         category=category,
+        #         subcategory=subcategory,
+        #         persona=persona,
+        #         confidence=95.0,
+        #         raw_title=title,
+        #         persona_weights=None # Predefined persona will load weights from YAML
+        #     )
+        #     _intent_cache[text] = result
+        #     return result
+        
+        # 3. Gemini fallback for ambiguous input
+        try:
+            result = await self._classify_with_gemini(title)
+            _intent_cache[text] = result
+            return result
+        except Exception as e:
+            logger.warning("Gemini classification failed, using default fallback", error=str(e))
+            # Ultimate fallback: laptop/general
+            result = IntentResult(
+                category="laptop",
+                subcategory="general",
+                persona="general",
+                confidence=30.0,
+                raw_title=title,
+                persona_weights=None
+            )
+            _intent_cache[text] = result
+            return result
 
     async def _classify_with_gemini(self, title: str) -> IntentResult:
         """Use Gemini to classify ambiguous/complex user input."""
@@ -90,7 +117,7 @@ class IntentClassifier:
             f"User request: \"{title}\"\n\n"
             f"Available categories and their details:\n{details_str}\n\n"
             f"Instructions:\n"
-            f"1. Choose a category from: {categories_str}. If none fits perfectly, pick the closest one.\n"
+            f"1. Choose a category from: {categories_str}. If none fits perfectly, pick the closest one. IMPORTANT: Terms like 'machine', 'beast', 'rig', or 'system' strongly imply a full computer (e.g., 'laptop'), NOT a standalone 'monitor', even if the word 'screen' is also present in the query.\n"
             f"2. Choose a subcategory (use one of the subcategories listed for that category, or choose 'general' if not specific).\n"
             f"3. Detect the persona/use-case. You can select one of the predefined personas, OR you can synthesize an AI-generated custom persona if the user has a specialized need (e.g., 'Music Producer', 'CAD Designer', 'Financial Analyst', 'Mobile Vlogger').\n"
             f"4. If and only if you choose a custom persona (i.e. not in the predefined list), you must provide a dict of weight multipliers for the Soft Attributes of the chosen category. The weight multipliers should range between 0.5 (low importance) and 2.5 (extremely high importance). Keep normal/unmentioned attributes at 1.0. If you pick a predefined persona, you can leave persona_weights null.\n"
@@ -125,6 +152,11 @@ class IntentClassifier:
         persona = result_dict.get("persona", "general").lower().strip()
         confidence = float(result_dict.get("confidence", 50.0))
         persona_weights = result_dict.get("persona_weights")
+        
+        # Post-processing heuristic to override LLM mistakes
+        text_lower = title.lower()
+        if category == "monitor" and any(word in text_lower for word in ["machine", "beast", "laptop", "pc", "computer", "rig", "setup", "macbook"]):
+            category = "laptop"
         
         # Validate that category exists
         valid_keys = [c["key"] for c in available]

@@ -745,8 +745,8 @@ async def seed_database():
                 "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80",
                 "base_price": 429.0,
                 "configs": [
-                    {"ram": 8, "storage": 128, "processor": "Apple A18", "processor_score": 8800, "camera_mp": 48.0, "battery_mah": 3279, "screen_size": 6.1, "price_adjust": 0.0},       # approx ₹35,607
-                    {"ram": 8, "storage": 256, "processor": "Apple A18", "processor_score": 8800, "camera_mp": 48.0, "battery_mah": 3279, "screen_size": 6.1, "price_adjust": 100.0}      # approx ₹43,907
+                    {"ram": 8, "storage": 128, "processor": "Apple A18", "processor_score": 8600, "camera_mp": 48.0, "battery_mah": 3279, "screen_size": 6.1, "price_adjust": 0.0},       # approx ₹35,607
+                    {"ram": 8, "storage": 256, "processor": "Apple A18", "processor_score": 8600, "camera_mp": 48.0, "battery_mah": 3279, "screen_size": 6.1, "price_adjust": 100.0}      # approx ₹43,907
                 ]
             },
             {
@@ -780,9 +780,9 @@ async def seed_database():
                 "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80",
                 "base_price": 336.70,
                 "configs": [
-                    {"ram": 8, "storage": 256, "processor": "Snapdragon 8s Gen 3", "processor_score": 9400, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.74, "price_adjust": -20.0}, # approx ₹31,036
-                    {"ram": 12, "storage": 256, "processor": "Snapdragon 8s Gen 3", "processor_score": 9400, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.74, "price_adjust": 0.0},  # approx ₹32,999
-                    {"ram": 16, "storage": 512, "processor": "Snapdragon 8s Gen 3", "processor_score": 9400, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.74, "price_adjust": 40.0}   # approx ₹36,919
+                    {"ram": 8, "storage": 256, "processor": "Snapdragon 8s Gen 3", "processor_score": 8500, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.74, "price_adjust": -20.0}, # approx ₹31,036
+                    {"ram": 12, "storage": 256, "processor": "Snapdragon 8s Gen 3", "processor_score": 8500, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.74, "price_adjust": 0.0},  # approx ₹32,999
+                    {"ram": 16, "storage": 512, "processor": "Snapdragon 8s Gen 3", "processor_score": 8500, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.74, "price_adjust": 40.0}   # approx ₹36,919
                 ]
             },
             {
@@ -798,9 +798,9 @@ async def seed_database():
                 "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80",
                 "base_price": 346.90,
                 "configs": [
-                    {"ram": 8, "storage": 256, "processor": "Snapdragon 8s Gen 4", "processor_score": 9600, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.74, "price_adjust": -30.0}, # approx ₹31,056
-                    {"ram": 12, "storage": 256, "processor": "Snapdragon 8s Gen 4", "processor_score": 9600, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.74, "price_adjust": 0.0},  # approx ₹33,999
-                    {"ram": 16, "storage": 512, "processor": "Snapdragon 8s Gen 4", "processor_score": 9600, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.74, "price_adjust": 40.0}   # approx ₹37,919
+                    {"ram": 8, "storage": 256, "processor": "Snapdragon 8s Gen 4", "processor_score": 8700, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.74, "price_adjust": -30.0}, # approx ₹31,056
+                    {"ram": 12, "storage": 256, "processor": "Snapdragon 8s Gen 4", "processor_score": 8700, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.74, "price_adjust": 0.0},  # approx ₹33,999
+                    {"ram": 16, "storage": 512, "processor": "Snapdragon 8s Gen 4", "processor_score": 8700, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.74, "price_adjust": 40.0}   # approx ₹37,919
                 ]
             },
             {
@@ -816,9 +816,9 @@ async def seed_database():
                 "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80",
                 "base_price": 357.10,
                 "configs": [
-                    {"ram": 8, "storage": 128, "processor": "Snapdragon 8 Gen 2", "processor_score": 9200, "camera_mp": 50.0, "battery_mah": 5160, "screen_size": 6.78, "price_adjust": -20.0}, # approx ₹33,035
-                    {"ram": 8, "storage": 256, "processor": "Snapdragon 8 Gen 2", "processor_score": 9200, "camera_mp": 50.0, "battery_mah": 5160, "screen_size": 6.78, "price_adjust": 0.0},  # approx ₹34,999
-                    {"ram": 12, "storage": 256, "processor": "Snapdragon 8 Gen 2", "processor_score": 9200, "camera_mp": 50.0, "battery_mah": 5160, "screen_size": 6.78, "price_adjust": 30.0}  # approx ₹37,939
+                    {"ram": 8, "storage": 128, "processor": "Snapdragon 8 Gen 2", "processor_score": 8900, "camera_mp": 50.0, "battery_mah": 5160, "screen_size": 6.78, "price_adjust": -20.0}, # approx ₹33,035
+                    {"ram": 8, "storage": 256, "processor": "Snapdragon 8 Gen 2", "processor_score": 8900, "camera_mp": 50.0, "battery_mah": 5160, "screen_size": 6.78, "price_adjust": 0.0},  # approx ₹34,999
+                    {"ram": 12, "storage": 256, "processor": "Snapdragon 8 Gen 2", "processor_score": 8900, "camera_mp": 50.0, "battery_mah": 5160, "screen_size": 6.78, "price_adjust": 30.0}  # approx ₹37,939
                 ]
             },
             {
@@ -834,8 +834,8 @@ async def seed_database():
                 "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80",
                 "base_price": 306.10,
                 "configs": [
-                    {"ram": 8, "storage": 256, "processor": "Snapdragon 8s Gen 3", "processor_score": 8900, "camera_mp": 50.0, "battery_mah": 5000, "screen_size": 6.67, "price_adjust": 0.0},  # approx ₹29,997
-                    {"ram": 12, "storage": 512, "processor": "Snapdragon 8s Gen 3", "processor_score": 8900, "camera_mp": 50.0, "battery_mah": 5000, "screen_size": 6.67, "price_adjust": 40.0}  # approx ₹33,917
+                    {"ram": 8, "storage": 256, "processor": "Snapdragon 8s Gen 3", "processor_score": 8600, "camera_mp": 50.0, "battery_mah": 5000, "screen_size": 6.67, "price_adjust": 0.0},  # approx ₹29,997
+                    {"ram": 12, "storage": 512, "processor": "Snapdragon 8s Gen 3", "processor_score": 8600, "camera_mp": 50.0, "battery_mah": 5000, "screen_size": 6.67, "price_adjust": 40.0}  # approx ₹33,917
                 ]
             },
             {
@@ -851,8 +851,42 @@ async def seed_database():
                 "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80",
                 "base_price": 316.30,
                 "configs": [
-                    {"ram": 8, "storage": 128, "processor": "Snapdragon 7+ Gen 3", "processor_score": 8400, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.78, "price_adjust": -10.0}, # approx ₹29,997
-                    {"ram": 12, "storage": 256, "processor": "Snapdragon 7+ Gen 3", "processor_score": 8400, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.78, "price_adjust": 0.0}   # approx ₹30,997
+                    {"ram": 8, "storage": 128, "processor": "Snapdragon 7+ Gen 3", "processor_score": 8100, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.78, "price_adjust": -10.0}, # approx ₹29,997
+                    {"ram": 12, "storage": 256, "processor": "Snapdragon 7+ Gen 3", "processor_score": 8100, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.78, "price_adjust": 0.0}   # approx ₹30,997
+                ]
+            },
+            {
+                "name": "OnePlus 12",
+                "brand": "OnePlus",
+                "phone_type": "gaming",
+                "manufacturer": "OnePlus",
+                "model_number": "CPH2581",
+                "build_score": 8.8,
+                "known_pros": ["Stunning 2K 120Hz display screen", "Exceptional Snapdragon 8 Gen 3 performance", "Huge 5400mAh battery with 100W charging"],
+                "known_cons": ["Large camera bump is heavy", "USB-C port alert slider collects dust"],
+                "known_issues": ["Occasional refresh rate drop in heavy multitasking"],
+                "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80",
+                "base_price": 539.0,
+                "configs": [
+                    {"ram": 12, "storage": 256, "processor": "Snapdragon 8 Gen 3", "processor_score": 9500, "camera_mp": 50.0, "battery_mah": 5400, "screen_size": 6.82, "price_adjust": 0.0},    # approx ₹52,822
+                    {"ram": 16, "storage": 512, "processor": "Snapdragon 8 Gen 3", "processor_score": 9500, "camera_mp": 50.0, "battery_mah": 5400, "screen_size": 6.82, "price_adjust": 50.0}     # approx ₹57,722
+                ]
+            },
+            {
+                "name": "Samsung Galaxy S24",
+                "brand": "Samsung",
+                "phone_type": "flagship",
+                "manufacturer": "Samsung",
+                "model_number": "SM-S921B",
+                "build_score": 8.7,
+                "known_pros": ["Compact lightweight design with premium armor aluminum", "Seven years of OS update cycle", "Excellent dynamic AMOLED display color"],
+                "known_cons": ["Exynos processor runs warmer than Snapdragon variants", "Slow charging limits to 25W"],
+                "known_issues": ["Speaker grill can sound slightly tinny at high volumes"],
+                "image_url": "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=500&q=80",
+                "base_price": 549.0,
+                "configs": [
+                    {"ram": 8, "storage": 128, "processor": "Exynos 2400", "processor_score": 9100, "camera_mp": 50.0, "battery_mah": 4000, "screen_size": 6.2, "price_adjust": 0.0},      # approx ₹53,802
+                    {"ram": 8, "storage": 256, "processor": "Exynos 2400", "processor_score": 9100, "camera_mp": 50.0, "battery_mah": 4000, "screen_size": 6.2, "price_adjust": 40.0}      # approx ₹57,722
                 ]
             }
         ]

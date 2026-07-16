@@ -9,6 +9,7 @@ class ProductSchema(BaseModel):
     price_inr: float
     specs: dict
     is_active: bool
+    configurations: list = Field(default_factory=list)
 
     class Config:
         from_attributes = True

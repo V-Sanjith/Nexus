@@ -32,7 +32,6 @@ export default function DecidePage() {
     document.documentElement.classList.add("dark");
     fetchDecision();
   }, [id]);
-
   const fetchDecision = async () => {
     try {
       const guestId = localStorage.getItem("nexus_guest_id") || "";
@@ -52,6 +51,17 @@ export default function DecidePage() {
       setCurrency(data.currency || "usd");
       setCategory(data.category || "laptop");
 
+      // Save to localStorage for stateless fallback
+      localStorage.setItem(`nexus_decision_${id}`, JSON.stringify({
+        id: data.id,
+        title: data.title,
+        category: data.category,
+        subcategory: data.subcategory,
+        detected_use_case: data.detected_use_case,
+        currency: data.currency,
+        questions: data.questions
+      }));
+
       // Pre-populate answers with defaults from options if available
       const initialAnswers: Record<string, any> = {};
       data.questions.forEach((q: Question) => {
@@ -67,6 +77,28 @@ export default function DecidePage() {
       setAnswers(initialAnswers);
       setLoading(false);
     } catch (err: any) {
+      // Fallback to localStorage if available
+      const cached = localStorage.getItem(`nexus_decision_${id}`);
+      if (cached) {
+        try {
+          const data = JSON.parse(cached);
+          setDecisionTitle(data.title);
+          setQuestions(data.questions);
+          setCurrency(data.currency || "usd");
+          setCategory(data.category || "laptop");
+          
+          const initialAnswers: Record<string, any> = {};
+          data.questions.forEach((q: Question) => {
+            initialAnswers[q.id] = q.options?.default ?? (q.input_type === "slider" ? 3 : "");
+          });
+          setAnswers(initialAnswers);
+          setLoading(false);
+          toast.success("Loaded session from local cache (offline/serverless mode)");
+          return;
+        } catch (e) {
+          console.error("Failed to parse cached decision", e);
+        }
+      }
       toast.error(err.message || "Could not connect to the backend server.");
       setLoading(false);
     }
@@ -116,9 +148,27 @@ export default function DecidePage() {
 
   const submitAllAnswers = async () => {
     setSubmitLoading(true);
+    
+    // Construct the answers for both stateful and stateless
+    const visibleQs = getVisibleQuestions(questions, answers);
+    
+    // Save answers to localStorage first
+    const cached = localStorage.getItem(`nexus_decision_${id}`);
+    if (cached) {
+      try {
+        const data = JSON.parse(cached);
+        data.answers = visibleQs.map((q) => ({
+          question_id: q.order_index, // use order_index for stateless
+          selected_value: answers[q.id]
+        }));
+        localStorage.setItem(`nexus_decision_${id}`, JSON.stringify(data));
+      } catch (e) {
+        console.error("Error saving answers to cache", e);
+      }
+    }
+
     try {
       const guestId = localStorage.getItem("nexus_guest_id") || "";
-      const visibleQs = getVisibleQuestions(questions, answers);
       const formattedAnswers = visibleQs.map((q) => ({
         question_id: q.id,
         selected_value: { value: answers[q.id] }
@@ -133,16 +183,19 @@ export default function DecidePage() {
         body: JSON.stringify({ answers: formattedAnswers }),
       });
 
+      // Even if saving to DB fails, we have it in localStorage so we can proceed!
       if (!response.ok) {
-        throw new Error("Failed to save your answers.");
+        console.warn("Failed to save answers to DB, proceeding with local cache.");
+      } else {
+        toast.success("All answers saved!");
       }
-
-      toast.success("All answers saved!");
+      
       // Proceed to evaluation results page
       router.push(`/decide/${id}/results`);
     } catch (err: any) {
-      toast.error(err.message || "Failed to commit answers.");
-      setSubmitLoading(false);
+      console.warn("Failed to save answers to DB due to network/server, proceeding with local cache.", err);
+      // Proceed to evaluation results page anyway, because we have it in localStorage!
+      router.push(`/decide/${id}/results`);
     }
   };
 
@@ -188,7 +241,7 @@ export default function DecidePage() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.06),transparent_40%)] pointer-events-none" />
 
       {/* Header */}
-      <header className="max-w-5xl mx-auto w-full px-6 py-6 flex items-center justify-between border-b border-slate-900 bg-slate-950/80 backdrop-blur-sm sticky top-0 z-20">
+      <header className="max-w-5xl mx-auto w-full px-4 py-4 md:px-6 md:py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-900 bg-slate-950/80 backdrop-blur-sm sticky top-0 z-20">
         <div className="flex items-center gap-3">
           <button 
             onClick={() => router.push("/")}
@@ -203,7 +256,7 @@ export default function DecidePage() {
         </div>
 
         {/* Progress Bar */}
-        <div className="flex items-center gap-3 w-40 md:w-60">
+        <div className="flex items-center gap-3 w-full sm:w-40 md:w-60">
           <div className="flex-grow bg-slate-850 h-2 rounded-full overflow-hidden border border-slate-800">
             <div 
               className="bg-gradient-to-r from-indigo-500 to-purple-600 h-full rounded-full transition-all duration-300"
@@ -215,9 +268,9 @@ export default function DecidePage() {
       </header>
 
       {/* Main wizard card container */}
-      <main className="max-w-2xl mx-auto w-full px-6 py-12 flex-grow flex items-center justify-center z-10">
+      <main className="max-w-2xl mx-auto w-full px-4 sm:px-6 py-8 sm:py-12 flex-grow flex items-center justify-center z-10">
         <div className="w-full p-[1px] rounded-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-slate-850 shadow-2xl border border-slate-800/80 backdrop-blur-xl">
-          <div className="p-8 bg-slate-950/95 rounded-[14px] flex flex-col justify-between min-h-[380px]">
+          <div className="p-5 sm:p-8 bg-slate-950/95 rounded-[14px] flex flex-col justify-between min-h-[380px]">
             
             {/* Bottom Actions or Question Card */}
             <div>
@@ -283,7 +336,7 @@ export default function DecidePage() {
                 {/* Slider (Weight Priority Scale) */}
                 {currentQuestion.input_type === "slider" && (
                   <div className="flex flex-col gap-4">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                       <span className="text-sm text-slate-400">Level of Importance:</span>
                       <span className="text-sm font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-full">
                         {getSliderLabel(answers[currentQuestion.id] ?? 3)}

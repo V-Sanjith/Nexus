@@ -8,6 +8,16 @@ class DecisionStartRequest(BaseModel):
     category: Optional[str] = Field(default=None, description="Optional category override. If omitted, auto-detected from title.")
     currency: Optional[str] = Field(default="inr", description="Target currency for pricing inputs, e.g. 'inr'")
 
+class IntentDetectRequest(BaseModel):
+    query: str = Field(..., min_length=2, max_length=200, description="The user's raw search query")
+
+class IntentDetectResponse(BaseModel):
+    category: str
+    subcategory: str
+    persona: str
+    confidence: float
+    questions_count: int
+
 from app.schemas.question import QuestionSchema
 
 class DecisionStartResponse(BaseModel):

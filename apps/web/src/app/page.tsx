@@ -12,11 +12,40 @@ export default function LandingPage() {
   const [title, setTitle] = useState("");
   const [currency, setCurrency] = useState("inr");
   const [loading, setLoading] = useState(false);
+  const [detectedIntent, setDetectedIntent] = useState<any>(null);
+  const [isDetecting, setIsDetecting] = useState(false);
 
   useEffect(() => {
     // Inject dark class to html to force premium dark mode styling
     document.documentElement.classList.add("dark");
   }, []);
+
+  // Debounced Intent Detection
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (title.trim().length >= 3) {
+        setIsDetecting(true);
+        try {
+          const res = await fetch(`${env.NEXT_PUBLIC_API_URL}/api/decisions/detect-intent`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: title.trim() }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setDetectedIntent(data);
+          }
+        } catch (e) {
+          // Silent ignore
+        } finally {
+          setIsDetecting(false);
+        }
+      } else {
+        setDetectedIntent(null);
+      }
+    }, 400); // 400ms debounce
+    return () => clearTimeout(timer);
+  }, [title]);
 
   const handleStart = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,7 +122,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Body - Two Column Layout */}
-      <main className="max-w-7xl mx-auto w-full px-6 py-12 flex-grow flex flex-col md:flex-row items-center justify-between gap-12 z-10">
+      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-8 sm:py-12 flex-grow flex flex-col md:flex-row items-center justify-between gap-12 z-10">
         {/* Left Column: Text & Form */}
         <div className="flex-grow flex-shrink-0 w-full md:w-1/2 flex flex-col items-start text-left max-w-xl">
           {/* Animated Feature Tag */}
@@ -119,19 +148,41 @@ export default function LandingPage() {
                 <label htmlFor="title" className="block text-left text-xs font-semibold uppercase text-slate-400 tracking-wider mb-2">
                   What are you looking for?
                 </label>
-                <input
-                  id="title"
-                  type="text"
-                  value={title}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
-                  placeholder="e.g. Gaming laptop, smartphone for photography, 4K monitor..."
-                  className="w-full px-4 py-3 rounded-lg border border-slate-800 bg-slate-900/60 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium"
-                  disabled={loading}
-                />
+                <div className="relative">
+                  <input
+                    id="title"
+                    type="text"
+                    value={title}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
+                    placeholder="e.g. Gaming laptop, smartphone for photography, 4K monitor..."
+                    className="w-full px-4 py-3 rounded-lg border border-slate-800 bg-slate-900/60 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium"
+                    disabled={loading}
+                  />
+                  {/* Instant Feedback Overlay */}
+                  {detectedIntent && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-indigo-500/30 rounded-lg p-3 shadow-xl z-20 animate-in fade-in slide-in-from-top-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-1.5 text-slate-300">
+                        <span className="text-indigo-400 font-semibold">Category:</span> <span className="capitalize">{detectedIntent.category}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-slate-300">
+                        <span className="text-indigo-400 font-semibold">Subtype:</span> <span className="capitalize">{detectedIntent.subcategory}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-slate-300">
+                        <span className="text-indigo-400 font-semibold">Persona:</span> <span className="capitalize">{detectedIntent.persona || "General"}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-slate-300">
+                        <span className="text-emerald-400 font-semibold">Confidence:</span> {Math.round(detectedIntent.confidence)}%
+                      </div>
+                      <div className="flex items-center gap-1.5 text-slate-300">
+                        <span className="text-indigo-400 font-semibold">Questions:</span> {detectedIntent.questions_count}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="flex gap-3">
-                <div className="flex-1">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-grow">
                   <label className="block text-left text-xs font-semibold uppercase text-slate-400 tracking-wider mb-2">
                     Currency Preference
                   </label>
@@ -146,11 +197,11 @@ export default function LandingPage() {
                   </select>
                 </div>
 
-                <div className="flex flex-col justify-end">
+                <div className="flex flex-col justify-end w-full sm:w-auto">
                   <button
                     type="submit"
                     disabled={loading}
-                    className="h-[46px] px-6 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:pointer-events-none"
+                    className="w-full h-[46px] px-6 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 disabled:pointer-events-none"
                   >
                     {loading ? (
                       <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -166,7 +217,7 @@ export default function LandingPage() {
 
         {/* Right Column: AI Workspace */}
         <div className="flex-grow w-full md:w-1/2 h-[350px] md:h-[550px] relative">
-          <AIWorkspace inputValue={title} isAnalyzing={loading} />
+          <AIWorkspace inputValue={title} isAnalyzing={loading || isDetecting} detectedIntent={detectedIntent} />
         </div>
       </main>
 

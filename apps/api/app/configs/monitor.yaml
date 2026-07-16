@@ -1,61 +1,89 @@
 category: monitor
-display_name: "Monitors"
-description: "Find your ideal display"
-
+display_name: Monitors
+description: Find your ideal display
 keywords:
-  - monitor
-  - display
-  - screen
-  - 4k monitor
-  - ultrawide
-  - curved
-  - gaming monitor
-  - external display
-
+- monitor
+- display
+- screen
+- 4k monitor
+- ultrawide
+- curved
+- gaming monitor
+- external display
 subcategories:
   gaming:
-    keywords: [gaming, gamer, esports, fps, fast, refresh, 144hz, 240hz, competitive]
+    keywords:
+    - gaming
+    - gamer
+    - esports
+    - fps
+    - fast
+    - refresh
+    - 144hz
+    - 240hz
+    - competitive
     default_persona: gamer
   designer:
-    keywords: [design, designer, color, colour, creative, art, photo editing, graphic, illustrator]
+    keywords:
+    - design
+    - designer
+    - color
+    - colour
+    - creative
+    - art
+    - photo editing
+    - graphic
+    - illustrator
     default_persona: designer
   productivity:
-    keywords: [productivity, coding, programming, developer, work, office, multi-monitor, dual]
+    keywords:
+    - productivity
+    - coding
+    - programming
+    - developer
+    - work
+    - office
+    - multi-monitor
+    - dual
     default_persona: developer
   general:
-    keywords: [general, basic, everyday, home, entertainment, streaming]
+    keywords:
+    - general
+    - basic
+    - everyday
+    - home
+    - entertainment
+    - streaming
     default_persona: general
-
 attributes:
-  - key: price
-    name: Price
-    type: cost
-    is_hard_filter: true
-  - key: screen_size_inches
-    name: Screen Size
-    type: benefit
-    is_hard_filter: false
-  - key: resolution_p
-    name: Resolution
-    type: benefit
-    is_hard_filter: false
-  - key: refresh_rate_hz
-    name: Refresh Rate
-    type: benefit
-    is_hard_filter: false
-  - key: response_time_ms
-    name: Response Time
-    type: cost
-    is_hard_filter: false
-  - key: color_accuracy_score
-    name: Color Accuracy
-    type: benefit
-    is_hard_filter: false
-  - key: panel_score
-    name: Panel Quality
-    type: benefit
-    is_hard_filter: false
-
+- key: price
+  name: Price
+  type: cost
+  is_hard_filter: true
+- key: screen_size_inches
+  name: Screen Size
+  type: benefit
+  is_hard_filter: false
+- key: resolution_p
+  name: Resolution
+  type: benefit
+  is_hard_filter: false
+- key: refresh_rate_hz
+  name: Refresh Rate
+  type: benefit
+  is_hard_filter: false
+- key: response_time_ms
+  name: Response Time
+  type: cost
+  is_hard_filter: false
+- key: color_accuracy_score
+  name: Color Accuracy
+  type: benefit
+  is_hard_filter: false
+- key: panel_score
+  name: Panel Quality
+  type: benefit
+  is_hard_filter: false
 personas:
   gamer:
     refresh_rate_hz: 2.5
@@ -69,127 +97,162 @@ personas:
     screen_size_inches: 1.6
     resolution_p: 1.5
     color_accuracy_score: 1.2
-  general: {}
-
+  general:
+    screen_size_inches: 1.0
+    refresh_rate_hz: 1.0
+    display_quality_score: 1.0
+    response_time_ms: 1.0
+    resolution_score: 1.0
+  gaming:
+    screen_size_inches: 1.0
+    refresh_rate_hz: 1.0
+    display_quality_score: 1.0
+    response_time_ms: 1.0
+    resolution_score: 1.0
+  productivity:
+    resolution_p: 2.0
+    color_accuracy_score: 1.8
+    panel_score: 1.5
+    screen_size_inches: 1.3
+    refresh_rate_hz: 0.5
+    response_time_ms: 0.5
 questions:
-  - order_index: 1
-    question_text: "What is your maximum budget for a monitor?"
-    input_type: budget_range
-    options:
-      min: 150
-      max: 3000
-      step: 50
-      default: 500
-    inr_options:
-      min: 12000
-      max: 250000
-      step: 5000
-      default: 40000
-    maps_to: price
-  - order_index: 2
-    question_text: "What resolution do you prefer?"
-    input_type: single_choice
-    options:
-      choices: [1080, 1440, 2160]
-      default: 1440
-      unit: "p"
-    maps_to: resolution_p
-  - order_index: 3
-    question_text: "How important is Refresh Rate (smoothness)?"
-    input_type: slider
-    options: {min: 0, max: 5, step: 1, default: 3}
-    maps_to: refresh_rate_hz
-  - order_index: 4
-    question_text: "What screen size do you prefer?"
-    input_type: single_choice
-    options:
-      choices: [24, 27, 32, 34]
-      default: 27
-      unit: "\""
-    maps_to: screen_size_inches
-  - order_index: 5
-    question_text: "How important is Color Accuracy (for design work)?"
-    input_type: slider
-    options: {min: 0, max: 5, step: 1, default: 3}
-    maps_to: color_accuracy_score
-  - order_index: 6
-    question_text: "How important is Response Time (for fast-paced content)?"
-    input_type: slider
-    options: {min: 0, max: 5, step: 1, default: 3}
-    maps_to: response_time_ms
-
-display_specs:
-  - key: screen_size_inches
-    label: "Screen Size"
-    unit: "\""
-  - key: resolution_p
-    label: "Resolution"
-    unit: "p"
-  - key: refresh_rate_hz
-    label: "Refresh Rate"
-    unit: "Hz"
-  - key: response_time_ms
-    label: "Response Time"
-    unit: "ms"
-  - key: color_accuracy_score
-    label: "Color Accuracy"
-    unit: "/10"
-  - key: panel_score
-    label: "Panel Quality"
-    unit: "/10"
-  - key: panel_type
-    label: "Panel Type"
-    unit: ""
-
-similarity_keys:
-  spec_keys: [refresh_rate_hz, response_time_ms, color_accuracy_score, resolution_p]
-  use_case_key: monitor_type
-
-tradeoff_comparisons:
-  - key: screen_size_inches
-    name: Screen Size
-    type: benefit
-    unit: "\""
-    precision: 0
-  - key: resolution_p
-    name: Resolution
-    type: benefit
+- order_index: 1
+  question_text: What is your maximum budget for a monitor?
+  input_type: budget_range
+  options:
+    min: 150
+    max: 3000
+    step: 50
+    default: 500
+  inr_options:
+    min: 12000
+    max: 250000
+    step: 5000
+    default: 40000
+  maps_to: price
+- order_index: 2
+  question_text: What resolution do you prefer?
+  input_type: single_choice
+  options:
+    choices:
+    - 1080
+    - 1440
+    - 2160
+    default: 1440
     unit: p
-    format_int: true
-  - key: refresh_rate_hz
-    name: Refresh Rate
-    type: benefit
-    unit: Hz
-    format_int: true
-  - key: response_time_ms
-    name: Response Time
-    type: cost
-    unit: ms
-    precision: 2
-  - key: color_accuracy_score
-    name: Color Accuracy
-    type: benefit
-    unit: "/10"
-    precision: 1
-  - key: panel_score
-    name: Panel Quality
-    type: benefit
-    unit: "/10"
-    precision: 0
-
+  maps_to: resolution_p
+- order_index: 3
+  question_text: How important is Refresh Rate (smoothness)?
+  input_type: slider
+  options:
+    min: 0
+    max: 5
+    step: 1
+    default: 3
+  maps_to: refresh_rate_hz
+- order_index: 4
+  question_text: What screen size do you prefer?
+  input_type: single_choice
+  options:
+    choices:
+    - 24
+    - 27
+    - 32
+    - 34
+    default: 27
+    unit: '"'
+  maps_to: screen_size_inches
+- order_index: 5
+  question_text: How important is Color Accuracy (for design work)?
+  input_type: slider
+  options:
+    min: 0
+    max: 5
+    step: 1
+    default: 3
+  maps_to: color_accuracy_score
+- order_index: 6
+  question_text: How important is Response Time (for fast-paced content)?
+  input_type: slider
+  options:
+    min: 0
+    max: 5
+    step: 1
+    default: 3
+  maps_to: response_time_ms
+display_specs:
+- key: screen_size_inches
+  label: Screen Size
+  unit: '"'
+- key: resolution_p
+  label: Resolution
+  unit: p
+- key: refresh_rate_hz
+  label: Refresh Rate
+  unit: Hz
+- key: response_time_ms
+  label: Response Time
+  unit: ms
+- key: color_accuracy_score
+  label: Color Accuracy
+  unit: /10
+- key: panel_score
+  label: Panel Quality
+  unit: /10
+- key: panel_type
+  label: Panel Type
+  unit: ''
+similarity_keys:
+  spec_keys:
+  - refresh_rate_hz
+  - response_time_ms
+  - color_accuracy_score
+  - resolution_p
+  use_case_key: monitor_type
+tradeoff_comparisons:
+- key: screen_size_inches
+  name: Screen Size
+  type: benefit
+  unit: '"'
+  precision: 0
+- key: resolution_p
+  name: Resolution
+  type: benefit
+  unit: p
+  format_int: true
+- key: refresh_rate_hz
+  name: Refresh Rate
+  type: benefit
+  unit: Hz
+  format_int: true
+- key: response_time_ms
+  name: Response Time
+  type: cost
+  unit: ms
+  precision: 2
+- key: color_accuracy_score
+  name: Color Accuracy
+  type: benefit
+  unit: /10
+  precision: 1
+- key: panel_score
+  name: Panel Quality
+  type: benefit
+  unit: /10
+  precision: 0
 fallback:
   max_results: 10
   constraints:
     price:
-      tolerance: 0.20
-      weight: 0.40
+      tolerance: 0.2
+      weight: 0.4
     screen_size_inches:
-      tolerance: 0.30
-      weight: 0.20
+      tolerance: 0.3
+      weight: 0.2
     resolution_p:
-      tolerance: 0.50
-      weight: 0.20
+      tolerance: 0.5
+      weight: 0.2
     refresh_rate_hz:
       tolerance: 0.65
-      weight: 0.20
-
+      weight: 0.2

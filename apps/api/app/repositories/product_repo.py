@@ -9,8 +9,8 @@ class IProductRepository(IBaseRepository[Product]):
         """Fetch a single product SKU card."""
         raise NotImplementedError
 
-    async def get_by_category(self, category: str, skip: int = 0, limit: int = 100) -> List[Product]:
-        """Fetch all active products in a specific category."""
+    async def get_by_category(self, category: str, skip: int = 0, limit: Optional[int] = None, subtype: Optional[str] = None) -> List[Product]:
+        """Fetch all active products in a specific category, optionally filtered by subtype."""
         raise NotImplementedError
 
     async def query_specs(self, category: str, query_filters: dict) -> List[Product]:

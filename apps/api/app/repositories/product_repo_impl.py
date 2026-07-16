@@ -42,11 +42,37 @@ class SQLAlchemyProductRepository(IProductRepository):
         result = await self.session.execute(stmt)
         return result.scalars().first()
 
-    async def get_by_category(self, category: str, skip: int = 0, limit: int = 100) -> List[Product]:
+    async def get_by_category(self, category: str, skip: int = 0, limit: Optional[int] = None, subtype: Optional[str] = None) -> List[Product]:
         stmt = select(Product).where(
             Product.category == category, 
             Product.is_active == True
-        ).offset(skip).limit(limit)
+        )
+        if subtype and subtype != "general":
+            db_subtype = subtype
+            if category == "laptop":
+                if subtype == "programming":
+                    db_subtype = "developer"
+                subtype_key = "laptop_type"
+            elif category == "smartphone":
+                subtype_key = "phone_type"
+            elif category == "monitor":
+                if subtype == "designer" or subtype == "productivity":
+                    db_subtype = "design"
+                subtype_key = "monitor_type"
+            else:
+                subtype_key = None
+
+            if subtype_key:
+                if category == "smartphone":
+                    stmt = stmt.where(Product.specs[subtype_key].as_string().in_([db_subtype, "flagship"]))
+                elif category == "laptop":
+                    stmt = stmt.where(Product.specs[subtype_key].as_string().in_([db_subtype, "premium"]))
+                else:
+                    stmt = stmt.where(Product.specs[subtype_key].as_string() == db_subtype)
+        stmt = stmt.offset(skip)
+        if limit is not None:
+            stmt = stmt.limit(limit)
+            
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 

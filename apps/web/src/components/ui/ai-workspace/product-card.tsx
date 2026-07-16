@@ -7,6 +7,7 @@ import type { HolographicProduct } from './product-data';
 interface ProductCardProps {
   product: HolographicProduct;
   isActive: boolean;
+  isFaded?: boolean;
   depth: number; // 0 = foreground, 1 = mid, 2 = background
   positionX: number;
   positionY: number;
@@ -21,6 +22,7 @@ interface ProductCardProps {
 export function ProductCard({
   product,
   isActive,
+  isFaded = false,
   depth,
   positionX,
   positionY,
@@ -52,9 +54,9 @@ export function ProductCard({
   };
 
   // Depth-based visual properties
-  const blurAmount = isActive ? 0 : depth === 0 ? 0.5 : depth === 1 ? 1.5 : 2.5;
-  const opacityValue = isActive ? 1 : depth === 0 ? 0.7 : depth === 1 ? 0.5 : 0.35;
-  const scaleValue = isActive ? 1 : 0.75 - depth * 0.06;
+  const blurAmount = isActive ? 0 : isFaded ? 5 : depth === 0 ? 0.5 : depth === 1 ? 1.5 : 2.5;
+  const opacityValue = isActive ? 1 : isFaded ? 0.05 : depth === 0 ? 0.7 : depth === 1 ? 0.5 : 0.35;
+  const scaleValue = isActive ? 1 : isFaded ? 0.5 : 0.75 - depth * 0.06;
 
   // Parallax offset based on depth and mouse
   const parallaxX = positionX + mouseX * (30 - depth * 8);
@@ -74,17 +76,19 @@ export function ProductCard({
           rotateY: tilt.x,
           rotateX: tilt.y,
           z: 0,
+          boxShadow: isHovered 
+            ? '0 0 50px rgba(168, 85, 247, 0.25)' 
+            : '0 0 30px rgba(99, 102, 241, 0.08)'
         }}
         exit={{ opacity: 0, scale: 0.7, y: -30 }}
-        transition={{ type: 'spring', stiffness: 120, damping: 18 }}
+        whileTap={{ scale: 0.97 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 20, mass: 0.8 }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onMouseEnter={handleMouseEnter}
         onClick={onClick}
-        className={`absolute left-6 md:left-10 bottom-6 md:bottom-10 w-[220px] md:w-[260px] p-4 md:p-5 rounded-xl border bg-slate-950/80 backdrop-blur-xl pointer-events-auto cursor-pointer transition-shadow duration-300 z-[22] ${
-          isHovered
-            ? 'border-purple-500/40 shadow-[0_0_50px_rgba(168,85,247,0.15)]'
-            : 'border-indigo-500/20 shadow-[0_0_30px_rgba(99,102,241,0.08)]'
+        className={`absolute left-6 md:left-10 bottom-6 md:bottom-10 w-[220px] md:w-[260px] p-4 md:p-5 rounded-xl border bg-slate-950/80 backdrop-blur-xl pointer-events-auto cursor-pointer z-[22] ${
+          isHovered ? 'border-purple-500/40' : 'border-indigo-500/20'
         }`}
         style={{ transformStyle: 'preserve-3d' }}
       >
@@ -212,11 +216,12 @@ export function ProductCard({
         z: -80 * (depth + 1),
         rotateY: positionX > 0 ? -8 : 8,
       }}
-      transition={{ type: 'spring', stiffness: 90, damping: 18 }}
-      whileHover={{ scale: scaleValue + 0.05, opacity: Math.min(opacityValue + 0.15, 1) }}
+      transition={{ type: 'spring', stiffness: 150, damping: 25 }}
+      whileHover={{ scale: scaleValue + 0.08, opacity: Math.min(opacityValue + 0.2, 1), zIndex: 30 }}
+      whileTap={{ scale: scaleValue - 0.05 }}
       onMouseEnter={handleMouseEnter}
       onClick={onClick}
-      className="absolute w-[110px] md:w-[130px] p-2.5 md:p-3 rounded-lg border border-slate-900/60 bg-slate-950/50 backdrop-blur-sm flex flex-col items-center gap-1.5 select-none pointer-events-auto cursor-pointer z-[18]"
+      className="absolute w-[110px] md:w-[130px] p-2.5 md:p-3 rounded-lg border border-slate-900/60 hover:border-indigo-500/30 hover:bg-slate-900/60 hover:shadow-[0_0_20px_rgba(99,102,241,0.15)] bg-slate-950/50 backdrop-blur-sm flex flex-col items-center gap-1.5 select-none pointer-events-auto cursor-pointer z-[18] transition-colors"
       style={{
         filter: `blur(${blurAmount}px)`,
         transformStyle: 'preserve-3d',
