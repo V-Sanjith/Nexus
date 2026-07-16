@@ -59,6 +59,55 @@ class GeminiProvider(BaseLLMProvider):
 
     def _generate_mock(self, prompt: str) -> Dict[str, Any]:
         """Generates a high-quality mock response reflecting the parsed prompt values."""
+        # Check if this is a classification prompt
+        if "Classify" in prompt or "category_key" in prompt:
+            query = ""
+            query_match = re.search(r"User request:\s*\"([^\"]+)\"", prompt)
+            if query_match:
+                query = query_match.group(1).lower().strip()
+            else:
+                query_match_2 = re.search(r"request:\s*\"([^\"]+)\"", prompt)
+                if query_match_2:
+                    query = query_match_2.group(1).lower().strip()
+            
+            # Default classification
+            category = "laptop"
+            subcategory = "general"
+            persona = "general"
+            
+            # Detect category
+            if any(k in query for k in ["phone", "smartphone", "mobile", "pixel", "iphone", "samsung s24", "oneplus"]):
+                category = "smartphone"
+            elif any(k in query for k in ["monitor", "screen", "display", "odyssey", "ultragear"]):
+                category = "monitor"
+            elif any(k in query for k in ["laptop", "notebook", "computer", "macbook", "thinkpad", "zephyrus", "victus"]):
+                category = "laptop"
+                
+            # Detect subcategory / persona
+            if "gaming" in query or "game" in query or "gamer" in query:
+                subcategory = "gaming"
+                persona = "gamer"
+            elif "developer" in query or "coding" in query or "program" in query:
+                subcategory = "developer" if category == "laptop" else "general"
+                persona = "developer"
+            elif "design" in query or "photo" in query or "creator" in query or "edit" in query:
+                subcategory = "creator" if category == "laptop" else ("photography" if category == "smartphone" else "design")
+                persona = "video_editor" if category == "laptop" else ("photographer" if category == "smartphone" else "designer")
+            elif "business" in query or "work" in query or "travel" in query:
+                subcategory = "business" if category == "laptop" else "flagship"
+                persona = "business_user"
+            elif "student" in query or "budget" in query:
+                subcategory = "student" if category == "laptop" else "budget"
+                persona = "student"
+                
+            return {
+                "category": category,
+                "subcategory": subcategory,
+                "persona": persona,
+                "confidence": 95.0,
+                "persona_weights": None
+            }
+
         # Simple extraction of key details from prompt to make mock response feel alive
         sku_match = re.search(r"Verdict Product SKU:\s*([a-zA-Z0-9\-]+)", prompt)
         name_match = re.search(r"Verdict Product Name:\s*([^\n]+)", prompt)

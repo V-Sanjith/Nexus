@@ -428,30 +428,100 @@ export default function ProductDetailPage() {
                 <Activity className="w-7 h-7 text-indigo-500" /> Performance Benchmarks
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Synthetic Benchmark Cards based on specs */}
-                <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl overflow-hidden relative">
-                  <div className="text-slate-400 text-sm font-bold mb-2">CPU PassMark</div>
-                  <div className="text-2xl font-black text-white mb-2">{product.specs?.cpu_score || "N/A"}</div>
-                  {product.specs?.cpu_score && (
-                    <div className="w-full bg-slate-800 rounded-full h-1.5 mt-4">
-                      <div className="bg-indigo-500 h-1.5 rounded-full" style={{width: `${Math.min(100, Math.max(5, (product.specs.cpu_score / 35000) * 100))}%`}}></div>
+                {product.category === "laptop" && (
+                  <>
+                    {/* Laptop CPU PassMark */}
+                    <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl overflow-hidden relative">
+                      <div className="text-slate-400 text-sm font-bold mb-2">CPU PassMark</div>
+                      <div className="text-2xl font-black text-white mb-2">{product.specs?.cpu_score || "N/A"}</div>
+                      {product.specs?.cpu_score && (
+                        <div className="w-full bg-slate-800 rounded-full h-1.5 mt-4">
+                          <div className="bg-indigo-500 h-1.5 rounded-full" style={{width: `${Math.min(100, Math.max(5, (product.specs.cpu_score / 35000) * 100))}%`}}></div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl overflow-hidden relative">
-                  <div className="text-slate-400 text-sm font-bold mb-2">GPU Benchmark</div>
-                  <div className="text-2xl font-black text-white mb-2">{product.specs?.gpu_score || "N/A"}</div>
-                  {product.specs?.gpu_score && (
-                    <div className="w-full bg-slate-800 rounded-full h-1.5 mt-4">
-                      <div className="bg-purple-500 h-1.5 rounded-full" style={{width: `${Math.min(100, Math.max(5, (product.specs.gpu_score / 25000) * 100))}%`}}></div>
+                    {/* Laptop GPU Benchmark */}
+                    <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl overflow-hidden relative">
+                      <div className="text-slate-400 text-sm font-bold mb-2">GPU Benchmark</div>
+                      <div className="text-2xl font-black text-white mb-2">{product.specs?.gpu_score || "N/A"}</div>
+                      {product.specs?.gpu_score && (
+                        <div className="w-full bg-slate-800 rounded-full h-1.5 mt-4">
+                          <div className="bg-purple-500 h-1.5 rounded-full" style={{width: `${Math.min(100, Math.max(5, (product.specs.gpu_score / 25000) * 100))}%`}}></div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl">
-                  <div className="text-slate-400 text-sm font-bold mb-2">Battery Efficiency</div>
-                  <div className="text-2xl font-black text-white mb-2">{product.specs?.battery_wh || 70}<span className="text-sm text-slate-500"> Wh</span></div>
-                  <div className="text-xs text-slate-500 mt-2">All-day capability</div>
-                </div>
+                    {/* Laptop Battery Capacity */}
+                    <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl">
+                      <div className="text-slate-400 text-sm font-bold mb-2">Battery Capacity</div>
+                      <div className="text-2xl font-black text-white mb-2">{product.specs?.battery_capacity_wh || "N/A"}<span className="text-sm text-slate-500"> Wh</span></div>
+                      <div className="text-xs text-slate-500 mt-2">All-day capability</div>
+                    </div>
+                  </>
+                )}
+
+                {product.category === "smartphone" && (
+                  <>
+                    {/* Smartphone Processor Score */}
+                    <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl overflow-hidden relative">
+                      <div className="text-slate-400 text-sm font-bold mb-2">Processor Performance</div>
+                      <div className="text-2xl font-black text-white mb-2">{product.specs?.processor_score || "N/A"}</div>
+                      {product.specs?.processor_score && (
+                        <div className="w-full bg-slate-800 rounded-full h-1.5 mt-4">
+                          <div className="bg-indigo-500 h-1.5 rounded-full" style={{width: `${Math.min(100, Math.max(5, (product.specs.processor_score / 10000) * 100))}%`}}></div>
+                        </div>
+                      )}
+                    </div>
+                    {/* Smartphone Camera MP */}
+                    <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl overflow-hidden relative">
+                      <div className="text-slate-400 text-sm font-bold mb-2">Camera Resolution</div>
+                      <div className="text-2xl font-black text-white mb-2">{product.specs?.camera_mp || "N/A"}<span className="text-sm text-slate-500"> MP</span></div>
+                      {product.specs?.camera_mp && (
+                        <div className="w-full bg-slate-800 rounded-full h-1.5 mt-4">
+                          <div className="bg-purple-500 h-1.5 rounded-full" style={{width: `${Math.min(100, Math.max(5, (product.specs.camera_mp / 200) * 100))}%`}}></div>
+                        </div>
+                      )}
+                    </div>
+                    {/* Smartphone Battery Capacity */}
+                    <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl">
+                      <div className="text-slate-400 text-sm font-bold mb-2">Battery Capacity</div>
+                      <div className="text-2xl font-black text-white mb-2">{product.specs?.battery_mah || "N/A"}<span className="text-sm text-slate-500"> mAh</span></div>
+                      <div className="text-xs text-slate-500 mt-2">Extended usage time</div>
+                    </div>
+                  </>
+                )}
+
+                {product.category === "monitor" && (
+                  <>
+                    {/* Monitor Refresh Rate */}
+                    <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl overflow-hidden relative">
+                      <div className="text-slate-400 text-sm font-bold mb-2">Refresh Rate</div>
+                      <div className="text-2xl font-black text-white mb-2">{product.specs?.refresh_rate_hz || "N/A"}<span className="text-sm text-slate-500"> Hz</span></div>
+                      {product.specs?.refresh_rate_hz && (
+                        <div className="w-full bg-slate-800 rounded-full h-1.5 mt-4">
+                          <div className="bg-indigo-500 h-1.5 rounded-full" style={{width: `${Math.min(100, Math.max(5, (product.specs.refresh_rate_hz / 360) * 100))}%`}}></div>
+                        </div>
+                      )}
+                    </div>
+                    {/* Monitor Response Time */}
+                    <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl overflow-hidden relative">
+                      <div className="text-slate-400 text-sm font-bold mb-2">Response Time</div>
+                      <div className="text-2xl font-black text-white mb-2">{product.specs?.response_time_ms || "N/A"}<span className="text-sm text-slate-500"> ms</span></div>
+                      {product.specs?.response_time_ms && (
+                        <div className="w-full bg-slate-800 rounded-full h-1.5 mt-4">
+                          <div className="bg-purple-500 h-1.5 rounded-full" style={{width: `${Math.min(100, Math.max(5, (10 / product.specs.response_time_ms) * 10))}%`}}></div>
+                        </div>
+                      )}
+                    </div>
+                    {/* Monitor Screen Size */}
+                    <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl">
+                      <div className="text-slate-400 text-sm font-bold mb-2">Screen Size</div>
+                      <div className="text-2xl font-black text-white mb-2">{product.specs?.screen_size_inches || "N/A"}<span className="text-sm text-slate-500"> inches</span></div>
+                      <div className="text-xs text-slate-500 mt-2">Diagonal display area</div>
+                    </div>
+                  </>
+                )}
+
+                {/* Build Quality - Common to all */}
                 <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl">
                   <div className="text-slate-400 text-sm font-bold mb-2">Build Quality</div>
                   <div className="text-2xl font-black text-white mb-2 flex gap-1">
