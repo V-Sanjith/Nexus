@@ -71,6 +71,13 @@ class RecommendationService:
 
         # Load dynamic merged configuration
         registry = CategoryRegistry()
+        if decision.subcategory == "general" or decision.detected_use_case == "general":
+            keyword_result = registry.match_keywords(decision.title)
+            if keyword_result and keyword_result[0] == decision.category:
+                decision.subcategory = keyword_result[1]
+                decision.detected_use_case = keyword_result[2]
+                logger.info("Dynamically detected subcategory from title", title=decision.title, subcategory=decision.subcategory, persona=decision.detected_use_case)
+
         config = registry.get(decision.category, decision.subcategory)
         if not config:
             raise ValueError(f"Category configuration for {decision.category} not found.")
