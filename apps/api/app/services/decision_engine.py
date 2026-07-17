@@ -532,6 +532,20 @@ class DecisionEngine:
             return [], trace, "no_match_found"
 
         # ---------------------------------------------------------
+        # STAGE 5.5: Pareto Dominance Filtering
+        # ---------------------------------------------------------
+        t_pareto_start = time.perf_counter()
+        current_pool, pareto_analysis = self._apply_pareto_filtering(current_pool, priorities)
+        trace["pareto_analysis"] = pareto_analysis
+        trace["pipeline_trace"].append({
+            "stage": 5.5,
+            "name": "Pareto Dominance Filtering",
+            "count": len(current_pool),
+            "time_ms": (time.perf_counter() - t_pareto_start) * 1000.0
+        })
+        print(f"  Pareto        -> {len(current_pool)} (dominated: {len(pareto_analysis['dominated_products'])})")
+
+        # ---------------------------------------------------------
         # STAGE 6: Soft Scoring (MCDA)
         # ---------------------------------------------------------
         t_mcda_start = time.perf_counter()
@@ -1071,3 +1085,113 @@ class DecisionEngine:
             })
             
         return tradeoffs
+
+    def _get_spec_val(self, product: Product, key: str) -> Optional[float]:
+        """Category-configurable specs retriever with aliasing."""
+        raw_val = product.specs.get(key)
+        if raw_val is None:
+            if key == "battery_hours":
+                raw_val = product.specs.get("estimated_office_hours")
+            elif key == "cpu_score":
+                raw_val = product.specs.get("cpu_multi_core") or product.specs.get("processor_score")
+            elif key == "gpu_score":
+                raw_val = product.specs.get("gpu_score_3dmark")
+        if raw_val is None:
+            return None
+        return DecisionEngine._safe_float(raw_val)
+
+    def _apply_pareto_filtering(self, pool: List[Product], priorities: Dict[str, float]) -> Tuple[List[Product], Dict[str, Any]]:
+        """Filters out strictly Pareto-dominated products and logs reasons."""
+        pareto_attributes = []
+        for attr in self.attributes:
+            if attr.key == "price":
+                continue
+            if attr.is_hard_filter:
+                # Hard filter attributes only participate if RAM/Storage
+                if attr.key in ["ram_gb", "storage_gb"]:
+                    pareto_attributes.append(attr)
+            else:
+                # Soft attributes participate if user priority >= 1.0
+                if priorities.get(attr.key, 3.0) >= 1.0:
+                    pareto_attributes.append(attr)
+
+        dominated_products = []
+        dominated_skus = set()
+
+        for p_b in pool:
+            is_dominated = False
+            dominator = None
+            reasons = []
+
+            for p_a in pool:
+                if p_a.sku == p_b.sku:
+                    continue
+
+                price_a = float(p_a.price_inr)
+                price_b = float(p_b.price_inr)
+
+                # 1. Price check (cost attribute: lower is better)
+                if price_a > price_b:
+                    continue
+
+                equal_or_better = True
+                strictly_better = False
+                better_reasons = []
+
+                if price_a < price_b:
+                    strictly_better = True
+                    better_reasons.append(f"cheaper (₹{price_a:,.0f} vs ₹{price_b:,.0f})")
+
+                # 2. Check specs
+                for attr in pareto_attributes:
+                    val_a = self._get_spec_val(p_a, attr.key)
+                    val_b = self._get_spec_val(p_b, attr.key)
+
+                    if val_a is None or val_b is None:
+                        # Safety: missing data prevents dominance assumption
+                        equal_or_better = False
+                        break
+
+                    if attr.type == "benefit":
+                        if val_a < val_b:
+                            equal_or_better = False
+                            break
+                        elif val_a > val_b:
+                            strictly_better = True
+                            better_reasons.append(f"higher {attr.name} ({val_a} vs {val_b})")
+                    elif attr.type == "cost":
+                        if val_a > val_b:
+                            equal_or_better = False
+                            break
+                        elif val_a < val_b:
+                            strictly_better = True
+                            better_reasons.append(f"lower {attr.name} ({val_a} vs {val_b})")
+
+                if equal_or_better and strictly_better:
+                    is_dominated = True
+                    dominator = p_a
+                    reasons = better_reasons
+                    break
+
+            if is_dominated:
+                dominated_products.append({
+                    "sku": p_b.sku,
+                    "name": p_b.name,
+                    "price": float(p_b.price_inr),
+                    "dominated_by": dominator.sku,
+                    "dominated_by_name": dominator.name,
+                    "dominated_by_price": float(dominator.price_inr),
+                    "reason": f"Dominated by {dominator.name} which is " + ", ".join(reasons)
+                })
+                dominated_skus.add(p_b.sku)
+
+        survivors = [p for p in pool if p.sku not in dominated_skus]
+        
+        pareto_analysis = {
+            "candidates_before": len(pool),
+            "candidates_after": len(survivors),
+            "dominated_products": dominated_products,
+            "domination_reason": {dp["sku"]: dp["reason"] for dp in dominated_products}
+        }
+        
+        return survivors, pareto_analysis

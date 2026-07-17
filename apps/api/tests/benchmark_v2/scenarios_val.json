@@ -1,0 +1,22 @@
+[
+  {
+    "id": "val_1",
+    "name": "Premium Camera Phone",
+    "category": "smartphone",
+    "subcategory": "general",
+    "budget": 120000.0,
+    "answers": {
+      "ram_gb": 12,
+      "storage_gb": 256,
+      "camera_mp": 5,
+      "battery_mah": 3,
+      "screen_size": 3,
+      "processor_score": 4
+    },
+    "expected_winner": [
+      "Galaxy S25",
+      "iPhone",
+      "Pixel"
+    ]
+  }
+]

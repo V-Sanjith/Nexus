@@ -1,0 +1,82 @@
+[
+  {
+    "id": "test_1",
+    "name": "Adversarial: Extremely Low Laptop Budget (Rs 20,000)",
+    "category": "laptop",
+    "subcategory": "general",
+    "budget": 20000.0,
+    "answers": {
+      "ram_gb": 8,
+      "storage_gb": 256
+    },
+    "expected_winner": null
+  },
+  {
+    "id": "test_2",
+    "name": "Adversarial: Extremely High Laptop Budget (Rs 5,000,000)",
+    "category": "laptop",
+    "subcategory": "general",
+    "budget": 5000000.0,
+    "answers": {
+      "ram_gb": 16,
+      "storage_gb": 512
+    },
+    "expected_winner": "ANY_MATCH"
+  },
+  {
+    "id": "test_3",
+    "name": "Budget Phone under Rs 15,000",
+    "category": "smartphone",
+    "subcategory": "general",
+    "budget": 15000.0,
+    "answers": {
+      "ram_gb": 6,
+      "storage_gb": 128
+    },
+    "expected_winner": "ANY_MATCH"
+  },
+  {
+    "id": "test_4",
+    "name": "Adversarial: Near budget boundary (Rs 80,000 Gaming Laptop)",
+    "category": "laptop",
+    "subcategory": "general",
+    "budget": 80000.0,
+    "answers": {
+      "ram_gb": 16,
+      "storage_gb": 512,
+      "gpu_score": 4
+    },
+    "expected_winner": "ANY_MATCH"
+  },
+  {
+    "id": "test_5",
+    "name": "Business Laptop under Rs 60,000",
+    "category": "laptop",
+    "subcategory": "general",
+    "budget": 60000.0,
+    "answers": {
+      "ram_gb": 8,
+      "storage_gb": 256,
+      "battery_hours": 5,
+      "weight_kg": 5,
+      "cpu_score": 3,
+      "gpu_score": 1
+    },
+    "expected_winner": "ANY_MATCH"
+  },
+  {
+    "id": "test_6",
+    "name": "Mid-range Phone under Rs 35,000",
+    "category": "smartphone",
+    "subcategory": "general",
+    "budget": 35000.0,
+    "answers": {
+      "ram_gb": 8,
+      "storage_gb": 128,
+      "camera_mp": 3,
+      "battery_mah": 4,
+      "processor_score": 3
+    },
+    "expected_winner": "ANY_MATCH"
+  }
+]

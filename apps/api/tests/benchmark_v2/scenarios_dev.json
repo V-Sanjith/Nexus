@@ -1,0 +1,41 @@
+[
+  {
+    "id": "dev_1",
+    "name": "Standard Laptop under 1 Lakh",
+    "category": "laptop",
+    "subcategory": "general",
+    "budget": 100000.0,
+    "answers": {
+      "ram_gb": 16,
+      "storage_gb": 512,
+      "cpu_score": 3,
+      "gpu_score": 2,
+      "battery_hours": 4,
+      "weight_kg": 3
+    },
+    "expected_winner": [
+      "Lenovo LOQ",
+      "ASUS TUF",
+      "Acer Nitro"
+    ]
+  },
+  {
+    "id": "dev_2",
+    "name": "Gaming Laptop under 1.5 Lakh",
+    "category": "laptop",
+    "subcategory": "general",
+    "budget": 150000.0,
+    "answers": {
+      "ram_gb": 16,
+      "storage_gb": 1024,
+      "cpu_score": 5,
+      "gpu_score": 5,
+      "battery_hours": 2,
+      "weight_kg": 1
+    },
+    "expected_winner": [
+      "ROG Zephyrus",
+      "Lenovo Legion"
+    ]
+  }
+]

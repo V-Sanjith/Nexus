@@ -216,7 +216,10 @@ async def run_recommendation(
             "reliability_score": recommendation.structured_analysis.get("reliability_score"),
             "reliability_reasons": recommendation.structured_analysis.get("reliability_reasons"),
             "battle_comparison": recommendation.structured_analysis.get("battle_comparison"),
-            "upgrade_analysis": recommendation.structured_analysis.get("upgrade_analysis")
+            "upgrade_analysis": recommendation.structured_analysis.get("upgrade_analysis"),
+            "spend_less_analysis": recommendation.structured_analysis.get("spend_less_analysis"),
+            "sensitivity_analysis": recommendation.structured_analysis.get("sensitivity_analysis"),
+            "reliability_breakdown": recommendation.structured_analysis.get("reliability_breakdown")
         }
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
@@ -387,7 +390,10 @@ async def run_recommendation_stateless(
             "reliability_score": sa.get("reliability_score"),
             "reliability_reasons": sa.get("reliability_reasons"),
             "battle_comparison": sa.get("battle_comparison"),
-            "upgrade_analysis": sa.get("upgrade_analysis")
+            "upgrade_analysis": sa.get("upgrade_analysis"),
+            "spend_less_analysis": sa.get("spend_less_analysis"),
+            "sensitivity_analysis": sa.get("sensitivity_analysis"),
+            "reliability_breakdown": sa.get("reliability_breakdown")
         }
     except ValueError as ve:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))

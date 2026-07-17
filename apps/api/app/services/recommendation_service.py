@@ -130,6 +130,144 @@ class RecommendationService:
         
         is_no_match = (status == "no_match_found")
         
+        sensitivity_analysis = []
+        rel_stability = 100.0
+        
+        if not is_no_match and scored_results:
+            winner = scored_results[0]
+            # Parse soft attributes and budget
+            soft_attrs = [attr for attr in engine.attributes if not attr.is_hard_filter]
+            priorities = {}
+            for attr in engine.attributes:
+                if not attr.is_hard_filter:
+                    priorities[attr.key] = 3.0
+            for ans in answers_summary:
+                maps_to = ans.get("maps_to")
+                val = ans.get("selected_value")
+                if isinstance(val, dict):
+                    val = val.get("value")
+                if maps_to and val is not None:
+                    try:
+                        val_f = float(val)
+                        if maps_to in priorities:
+                            priorities[maps_to] = val_f
+                    except ValueError:
+                        pass
+            
+            sorted_soft_attrs = sorted(soft_attrs, key=lambda attr: priorities.get(attr.key, 3.0), reverse=True)
+            top_soft_attrs = sorted_soft_attrs[:3]
+            
+            # Parse budget
+            budget_inr = None
+            for ans in answers_summary:
+                maps_to = ans.get("maps_to")
+                val = ans.get("selected_value")
+                if isinstance(val, dict):
+                    val = val.get("value")
+                if maps_to == "price" and val is not None:
+                    try:
+                        budget_inr = float(val)
+                    except ValueError:
+                        pass
+            
+            # Lower budget simulation
+            if budget_inr is not None:
+                sim_answers = []
+                for ans in answers_summary:
+                    if ans.get("maps_to") == "price":
+                        sim_answers.append({**ans, "selected_value": {"value": budget_inr * 0.8}})
+                    else:
+                        sim_answers.append(ans)
+                
+                sim_results, _, sim_status = engine.run(
+                    products,
+                    sim_answers,
+                    persona_hint=decision.detected_use_case,
+                    custom_persona_weights=decision.persona_weights,
+                    intent_confidence=decision.intent_confidence,
+                    currency_code=target_currency,
+                    currency_symbol=local_symbol,
+                    query=decision.title
+                )
+                if sim_status == "success" and sim_results:
+                    sim_winner = sim_results[0].product
+                    if sim_winner.sku != winner.product.sku:
+                        sensitivity_analysis.append({
+                            "parameter": "price",
+                            "trigger_condition": f"your budget drops below {local_symbol}{budget_inr * 0.8:,.0f}",
+                            "alternative_winner_sku": sim_winner.sku,
+                            "alternative_winner_name": sim_winner.name.split(" (")[0].strip()
+                        })
+            
+            # Top soft attributes simulation
+            for attr in top_soft_attrs:
+                sim_answers = []
+                found = False
+                for ans in answers_summary:
+                    if ans.get("maps_to") == attr.key:
+                        sim_answers.append({**ans, "selected_value": {"value": 5.0}})
+                        found = True
+                    else:
+                        sim_answers.append(ans)
+                if not found:
+                    sim_answers.append({
+                        "question_text": f"Importance of {attr.name}",
+                        "selected_value": {"value": 5.0},
+                        "maps_to": attr.key
+                    })
+                
+                sim_results, _, sim_status = engine.run(
+                    products,
+                    sim_answers,
+                    persona_hint=decision.detected_use_case,
+                    custom_persona_weights=decision.persona_weights,
+                    intent_confidence=decision.intent_confidence,
+                    currency_code=target_currency,
+                    currency_symbol=local_symbol,
+                    query=decision.title
+                )
+                if sim_status == "success" and sim_results:
+                    sim_winner = sim_results[0].product
+                    if sim_winner.sku != winner.product.sku and sim_winner.sku not in [s["alternative_winner_sku"] for s in sensitivity_analysis]:
+                        sensitivity_analysis.append({
+                            "parameter": attr.key,
+                            "trigger_condition": f"{attr.name} becomes a HIGH priority",
+                            "alternative_winner_sku": sim_winner.sku,
+                            "alternative_winner_name": sim_winner.name.split(" (")[0].strip()
+                        })
+            
+            # Stability simulation for reliability
+            sim_answers = []
+            if len(top_soft_attrs) >= 2:
+                highest_attr = top_soft_attrs[0]
+                second_attr = top_soft_attrs[1]
+                for ans in answers_summary:
+                    if ans.get("maps_to") == highest_attr.key:
+                        val = priorities.get(highest_attr.key, 3.0)
+                        sim_answers.append({**ans, "selected_value": {"value": max(1.0, val - 0.5)}})
+                    elif ans.get("maps_to") == second_attr.key:
+                        val = priorities.get(second_attr.key, 3.0)
+                        sim_answers.append({**ans, "selected_value": {"value": min(5.0, val + 0.5)}})
+                    else:
+                        sim_answers.append(ans)
+            else:
+                sim_answers = answers_summary
+            
+            sim_results, _, sim_status = engine.run(
+                products,
+                sim_answers,
+                persona_hint=decision.detected_use_case,
+                custom_persona_weights=decision.persona_weights,
+                intent_confidence=decision.intent_confidence,
+                currency_code=target_currency,
+                currency_symbol=local_symbol,
+                query=decision.title
+            )
+            if sim_status == "success" and sim_results:
+                sim_winner = sim_results[0].product
+                if sim_winner.sku != winner.product.sku:
+                    rel_stability = 80.0
+        
         if is_no_match:
             logger.warning("No products qualified. Activating closest matches fallback.")
             
@@ -318,45 +456,143 @@ class RecommendationService:
             "ranked": len(trace.get("ranking", []))
         }
         
-        # Calculate Reliability Score & Reasons
-        reliability_reasons = []
-        if decision.intent_confidence and decision.intent_confidence >= 90:
-            reliability_reasons.append("High confidence intent detection")
-        else:
-            reliability_reasons.append("Moderate confidence intent detection")
+        # Build Cheaper Alternative Spend Less Analysis
+        spend_less_analysis = None
+        cheaper_alt = None
+        best_savings_efficiency = -1.0
+        
+        winner_price = float(winner.product.price_inr)
+        winner_score = float(winner.score)
+        
+        for cand in scored_results[1:]:
+            cand_price = float(cand.product.price_inr)
+            cand_score = float(cand.score)
             
-        spec_keys_checked = len([k for k in winner.product.specs.keys() if winner.product.specs[k] is not None])
-        spec_factor = spec_keys_checked / max(1, len(config.attributes))
-        if spec_factor >= 0.8:
-            reliability_reasons.append("Complete specifications coverage")
-        else:
-            reliability_reasons.append("Partial specifications coverage")
+            if cand_price < winner_price:
+                pct_savings = ((winner_price - cand_price) / winner_price) * 100.0
+                retained_utility = (cand_score / winner_score) * 100.0
+                
+                # Minimum savings 5% and minimum utility 85%
+                if pct_savings >= 5.0 and retained_utility >= 85.0:
+                    suitability_loss = (winner_score - cand_score) * 100.0
+                    savings_efficiency = pct_savings / (suitability_loss + 1.0)
+                    
+                    if savings_efficiency > best_savings_efficiency:
+                        best_savings_efficiency = savings_efficiency
+                        cheaper_alt = cand
+                        
+        if cheaper_alt:
+            alt_price = float(cheaper_alt.product.price_inr)
+            price_savings = winner_price - alt_price
+            pct_savings = (price_savings / winner_price) * 100.0
+            retained_utility = (float(cheaper_alt.score) / winner_score) * 100.0
+            suitability_diff = (winner_score - float(cheaper_alt.score)) * 100.0
             
-        if len(alternatives) > 0:
-            margin = winner.score - alternatives[0].score
-            if margin >= 0.08:
-                reliability_reasons.append("Strong margin over runner-up")
-            elif margin >= 0.03:
-                reliability_reasons.append("Clear margin over runner-up")
+            # Categorize verdict
+            if retained_utility >= 95.0 and pct_savings >= 15.0:
+                spend_less_verdict = "Strong cheaper alternative"
+            elif retained_utility >= 90.0:
+                spend_less_verdict = "Worth considering"
+            elif retained_utility >= 85.0:
+                spend_less_verdict = "Meaningful compromises"
             else:
-                reliability_reasons.append("Narrow margin over runner-up")
-        else:
-            reliability_reasons.append("No comparable runner-up found")
+                spend_less_verdict = "Stick with the winner"
+                
+            # Generic loss and similarities logic
+            spec_losses = []
+            spec_similarities = []
             
-        matched_cnt = funnel_metrics["constraints_passed"]
-        reliability_reasons.append(f"{matched_cnt} matching products available")
-        
-        rel_det = float(decision.intent_confidence or 95.0)
-        rel_spec = min(100.0, spec_factor * 100.0)
-        rel_margin = 100.0 if (len(alternatives) > 0 and (winner.score - alternatives[0].score) >= 0.05) else 85.0
-        rel_pool = min(100.0, 70.0 + min(30.0, matched_cnt * 2.0))
-        
-        reliability_score = round((rel_det + rel_spec + rel_margin + rel_pool) / 4.0, 1)
+            for attr in config.attributes:
+                if attr.key == "price":
+                    continue
+                w_val = engine._get_spec_val(winner.product, attr.key)
+                c_val = engine._get_spec_val(cheaper_alt.product, attr.key)
+                
+                if w_val is not None and c_val is not None:
+                    if attr.type == "benefit":
+                        if c_val < w_val:
+                            pct_loss = round(((w_val - c_val) / w_val) * 100.0) if w_val > 0 else 0
+                            spec_losses.append(f"{pct_loss}% lower {attr.name}")
+                        else:
+                            spec_similarities.append(f"Similar {attr.name}")
+                    else:  # cost (e.g. weight_kg: lower is better)
+                        if c_val > w_val:
+                            pct_loss = round(((c_val - w_val) / w_val) * 100.0) if w_val > 0 else 0
+                            spec_losses.append(f"{pct_loss}% higher {attr.name}")
+                        else:
+                            spec_similarities.append(f"Similar {attr.name}")
+                            
+            if not spec_losses:
+                spec_losses.append("Slightly lower overall specifications")
+            if not spec_similarities:
+                spec_similarities.append("Core functionality")
+                
+            spend_less_analysis = {
+                "sku": cheaper_alt.product.sku,
+                "name": cheaper_alt.product.name.split(" (")[0].strip(),
+                "price": alt_price,
+                "price_savings": price_savings,
+                "percentage_savings": pct_savings,
+                "suitability_difference": suitability_diff,
+                "retained_utility_percentage": retained_utility,
+                "savings_efficiency": best_savings_efficiency,
+                "important_spec_losses": spec_losses,
+                "important_spec_similarities": spec_similarities,
+                "verdict": spend_less_verdict
+            }
 
+        # Build Upgrade / Worth Upgrading Analysis
+        upgrade_analysis = None
+        more_expensive = [cand for cand in scored_results if float(cand.product.price_inr) > winner_local_price]
+        if more_expensive:
+            target_up = min(more_expensive, key=lambda x: float(x.product.price_inr))
+            up_price = float(target_up.product.price_inr)
+            price_diff = up_price - winner_local_price
+            
+            absolute_utility_gain = float(target_up.score) - winner_score
+            percentage_utility_gain = absolute_utility_gain * 100.0
+            utility_gain_per_10k = percentage_utility_gain / (price_diff / 10000.0) if price_diff > 0 else 0.0
+            
+            if percentage_utility_gain >= 8.0 and utility_gain_per_10k >= 4.0:
+                rec_verdict = "Highly recommended upgrade"
+            elif percentage_utility_gain >= 4.0 and utility_gain_per_10k >= 2.0:
+                rec_verdict = "Worth considering upgrade"
+            elif percentage_utility_gain < 2.0 or utility_gain_per_10k < 1.0:
+                rec_verdict = "Not worth upgrading"
+            else:
+                rec_verdict = "Optional upgrade"
+                
+            up_gains = []
+            for attr in config.attributes:
+                if attr.key == "price":
+                    continue
+                w_val = engine._get_spec_val(winner.product, attr.key)
+                u_val = engine._get_spec_val(target_up.product, attr.key)
+                if w_val is not None and u_val is not None:
+                    if attr.type == "benefit" and u_val > w_val:
+                        up_gains.append(f"Better {attr.name} ({u_val} vs {w_val})")
+                    elif attr.type == "cost" and u_val < w_val:
+                        up_gains.append(f"Better {attr.name} ({u_val} vs {w_val})")
+                        
+            if not up_gains:
+                up_gains.append("Slightly higher overall specifications")
+                
+            upgrade_analysis = {
+                "sku": target_up.product.sku,
+                "name": target_up.product.name.split(" (")[0].strip(),
+                "price": up_price,
+                "extra_cost": price_diff,
+                "absolute_utility_gain": absolute_utility_gain,
+                "percentage_utility_gain": percentage_utility_gain,
+                "utility_gain_per_10k": utility_gain_per_10k,
+                "gains": up_gains,
+                "verdict": rec_verdict
+            }
+                
         # Build Runner-Up Battle Comparison
         battle_comparison = None
-        if len(alternatives) > 0:
-            runner = alternatives[0]
+        if len(scored_results) >= 2:
+            runner = scored_results[1]
             w_specs = winner.product.specs
             r_specs = runner.product.specs
             
@@ -466,47 +702,67 @@ class RecommendationService:
                 "deltas": deltas
             }
 
-        # Build Upgrade / Worth Upgrading Analysis
-        upgrade_analysis = None
-        if len(alternatives) > 0:
-            more_expensive = [alt for alt in alternatives if float(alt.product.price_inr) > winner_local_price]
-            if more_expensive:
-                target_up = min(more_expensive, key=lambda x: float(x.product.price_inr))
-                up_price = float(target_up.product.price_inr)
-                price_diff = up_price - winner_local_price
-                
-                up_gains = []
-                w_specs = winner.product.specs
-                u_specs = target_up.product.specs
-                
-                if u_specs.get("ram_gb", 0) > w_specs.get("ram_gb", 0):
-                    up_gains.append(f"{u_specs.get('ram_gb')}GB RAM (vs {w_specs.get('ram_gb')}GB)")
-                if u_specs.get("storage_gb", 0) > w_specs.get("storage_gb", 0):
-                    up_gains.append(f"{u_specs.get('storage_gb')}GB SSD (vs {w_specs.get('storage_gb')}GB)")
-                
-                w_cpu = w_specs.get("cpu_score") or w_specs.get("cpu_multi_core") or w_specs.get("processor_score")
-                u_cpu = u_specs.get("cpu_score") or u_specs.get("cpu_multi_core") or u_specs.get("processor_score")
-                if w_cpu and u_cpu and float(u_cpu) > float(w_cpu):
-                    up_gains.append("Faster CPU")
-                    
-                w_gpu = w_specs.get("gpu_score") or w_specs.get("gpu_score_3dmark")
-                u_gpu = u_specs.get("gpu_score") or u_specs.get("gpu_score_3dmark")
-                if w_gpu and u_gpu and float(u_gpu) > float(w_gpu):
-                    up_gains.append("Faster GPU")
-                    
-                if target_up.score > winner.score + 0.05:
-                    rec_verdict = f"Highly recommended upgrade if you have the budget, as it yields major suitability gains."
-                else:
-                    rec_verdict = f"Not worth upgrading unless you specifically need: {', '.join(up_gains[:2]) or 'the spec increase'}."
-                    
-                upgrade_analysis = {
-                    "sku": target_up.product.sku,
-                    "name": target_up.product.name.split(" (")[0].strip(),
-                    "price": up_price,
-                    "extra_cost": price_diff,
-                    "gains": up_gains,
-                    "verdict": rec_verdict
-                }
+        # Calculate Reliability Score & detailed breakdown
+        matched_cnt = funnel_metrics["constraints_passed"]
+        rel_intent = float(decision.intent_confidence or 95.0)
+        
+        filled_specs = len([k for k, v in winner.product.specs.items() if v is not None])
+        total_config_specs = max(1, len(config.attributes))
+        rel_spec = min(100.0, (filled_specs / total_config_specs) * 100.0)
+        
+        rel_catalog = min(100.0, 50.0 + min(50.0, matched_cnt * 2.0))
+        
+        if len(scored_results) >= 2:
+            margin = winner.score - scored_results[1].score
+            rel_margin = min(100.0, 70.0 + margin * 300.0)
+        else:
+            rel_margin = 100.0
+            
+        present_attrs = sum(1 for attr in config.attributes if engine._get_spec_val(winner.product, attr.key) is not None)
+        rel_completeness = (present_attrs / len(config.attributes)) * 100.0 if config.attributes else 100.0
+        
+        # Stability check
+        rel_stability_score = float(rel_stability)
+        
+        reliability_score = round(0.20 * rel_intent + 0.15 * rel_spec + 0.15 * rel_catalog + 0.20 * rel_margin + 0.15 * rel_completeness + 0.15 * rel_stability_score, 1)
+        
+        reliability_reasons = []
+        if rel_intent >= 90:
+            reliability_reasons.append("Intent clearly understood")
+        else:
+            reliability_reasons.append("Ambiguous intent fallback")
+            
+        if rel_spec >= 80:
+            reliability_reasons.append("Complete specifications coverage")
+        else:
+            reliability_reasons.append("Partial specifications coverage")
+            
+        reliability_reasons.append(f"{matched_cnt} eligible candidates analyzed")
+        
+        if len(scored_results) >= 2:
+            margin = winner.score - scored_results[1].score
+            if margin >= 0.08:
+                reliability_reasons.append("Clear advantage over runner-up")
+            elif margin >= 0.03:
+                reliability_reasons.append("Moderate advantage over runner-up")
+            else:
+                reliability_reasons.append("Narrow margin over runner-up")
+        else:
+            reliability_reasons.append("No other candidates found")
+            
+        if rel_stability_score == 100.0:
+            reliability_reasons.append("Recommendation is stable under priority changes")
+        else:
+            reliability_reasons.append("Recommendation changes under priority variations")
+            
+        reliability_breakdown = {
+            "intent_confidence": rel_intent,
+            "specification_coverage": rel_spec,
+            "catalog_coverage": rel_catalog,
+            "score_margin": rel_margin,
+            "data_completeness": rel_completeness,
+            "stability_score": rel_stability_score
+        }
 
         # Build Detailed Confidence Breakdown
         win_margin = 90.0
@@ -549,6 +805,9 @@ class RecommendationService:
             "reliability_reasons": reliability_reasons,
             "battle_comparison": battle_comparison,
             "upgrade_analysis": upgrade_analysis,
+            "spend_less_analysis": spend_less_analysis,
+            "sensitivity_analysis": sensitivity_analysis,
+            "reliability_breakdown": reliability_breakdown,
             "user_preferences": {
                 "category": decision.category,
                 "subcategory": decision.subcategory,

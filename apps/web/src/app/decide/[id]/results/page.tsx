@@ -72,8 +72,38 @@ interface Recommendation {
     name: string;
     price: number;
     extra_cost: number;
+    absolute_utility_gain?: number;
+    percentage_utility_gain?: number;
+    utility_gain_per_10k?: number;
     gains: string[];
     verdict: string;
+  };
+  spend_less_analysis?: {
+    sku: string;
+    name: string;
+    price: number;
+    price_savings: number;
+    percentage_savings: number;
+    suitability_difference: number;
+    retained_utility_percentage: number;
+    savings_efficiency: number;
+    important_spec_losses: string[];
+    important_spec_similarities: string[];
+    verdict: string;
+  };
+  sensitivity_analysis?: {
+    parameter: string;
+    trigger_condition: string;
+    alternative_winner_sku: string;
+    alternative_winner_name: string;
+  }[];
+  reliability_breakdown?: {
+    intent_confidence: number;
+    specification_coverage: number;
+    catalog_coverage: number;
+    score_margin: number;
+    data_completeness: number;
+    stability_score: number;
   };
   funnel_metrics?: {
     total_compared: number;
@@ -201,7 +231,7 @@ export default function ResultsPage() {
     if (loadingPhase !== "animating" || !recommendation) return;
 
     const timer = setTimeout(() => {
-      if (animationStep < 10) {
+      if (animationStep < 7) {
         setAnimationStep((prev) => prev + 1);
       } else {
         setLoading(false);
@@ -457,63 +487,65 @@ export default function ResultsPage() {
     
     // Fallbacks just in case the trace is missing these specific nodes, to avoid 0 counts
     const loadedCount = getStageCount("Catalog Loading") || 15248;
-    const subtypeCount = getFilterCount("Subtype") || 4812;
-    const filterCount = getFilterCount("Stock") || 1947;
     const budgetCount = getFilterCount("Budget") || 843;
+    const rankedCount = recommendation?.decision_trace?.ranking?.length || 10;
+
+    // 7-step decision-oriented loading sequence
+    const steps = [
+      { icon: "🔍", text: "Understanding your requirements..." },
+      { icon: "📦", text: `Scanning ${loadedCount.toLocaleString()} products in the catalog` },
+      { icon: "💰", text: `Filtering ${budgetCount.toLocaleString()} options within your budget` },
+      { icon: "⚖️", text: "Running multi-criteria decision analysis..." },
+      { icon: "🏆", text: `Ranking the top ${rankedCount} candidates` },
+      { icon: "📊", text: "Evaluating alternatives & trade-offs" },
+      { icon: "✅", text: isNoMatch ? "No exact match found — preparing suggestions" : "Your best match is ready!" },
+    ];
 
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center flex-col p-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.08),transparent_50%)] pointer-events-none" />
         
-        <div className="max-w-xl w-full bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative z-10 font-mono">
+        <div className="max-w-xl w-full bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative z-10">
           <div className="flex items-center gap-3 mb-8 border-b border-slate-800/80 pb-4">
             <span className={`w-3 h-3 rounded-full ${loadingPhase === "connecting" ? "bg-amber-500 animate-ping" : "bg-emerald-500 animate-pulse"}`} />
             <span className="text-sm font-semibold tracking-wide text-slate-300 uppercase">
-              {loadingPhase === "connecting" ? "Consulting Engine..." : "Pipeline Diagnostics"}
+              {loadingPhase === "connecting" ? "Consulting Decision Engine..." : "Making your buying decision"}
             </span>
           </div>
 
-          <div className="flex flex-col gap-4 text-sm text-slate-400">
+          <div className="flex flex-col gap-3 text-sm text-slate-400">
             {loadingPhase === "connecting" ? (
                <div className="flex items-center gap-3 py-4 text-emerald-400">
                  <span className="animate-spin border-2 border-emerald-500/20 border-t-emerald-500 rounded-full w-5 h-5"></span>
-                 Awaiting connection...
+                 Connecting to the Nexus Decision Engine...
                </div>
             ) : (
               <>
-                <div className={`transition-all duration-300 flex items-center gap-3 ${animationStep >= 0 ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 h-0 overflow-hidden"}`}>
-                  <span className="text-emerald-500 font-bold">✓</span> Intent detected
-                </div>
-                <div className={`transition-all duration-300 flex items-center gap-3 ${animationStep >= 1 ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 h-0 overflow-hidden"}`}>
-                  <span className="text-emerald-500 font-bold">✓</span> Category: <span className="text-white font-semibold">{categoryName}</span>
-                </div>
-                <div className={`transition-all duration-300 flex items-center gap-3 ${animationStep >= 2 ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 h-0 overflow-hidden"}`}>
-                  <span className="text-emerald-500 font-bold">✓</span> {loadedCount.toLocaleString()} products loaded
-                </div>
-                <div className={`transition-all duration-300 flex items-center gap-3 ${animationStep >= 3 ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 h-0 overflow-hidden"}`}>
-                  <span className="text-emerald-500 font-bold">✓</span> {subtypeCount.toLocaleString()} {detectedSubtype.toLowerCase()} {categoryName.toLowerCase()}s
-                </div>
-                <div className={`transition-all duration-300 flex items-center gap-3 ${animationStep >= 4 ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 h-0 overflow-hidden"}`}>
-                  <span className="text-emerald-500 font-bold">✓</span> {filterCount.toLocaleString()} passed mandatory filters
-                </div>
-                <div className={`transition-all duration-300 flex items-center gap-3 ${animationStep >= 5 ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 h-0 overflow-hidden"}`}>
-                  <span className="text-emerald-500 font-bold">✓</span> {budgetCount.toLocaleString()} within budget
-                </div>
-                <div className={`transition-all duration-300 flex items-center gap-3 ${animationStep >= 6 ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 h-0 overflow-hidden"}`}>
-                  <span className="text-emerald-500 font-bold">✓</span> Running MCDA scoring...
-                </div>
-                <div className={`transition-all duration-300 flex items-center gap-3 ${animationStep >= 7 ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 h-0 overflow-hidden"}`}>
-                  <span className="text-emerald-500 font-bold">✓</span> {isNoMatch ? "No match found" : "Winner selected"}
-                </div>
-                <div className={`transition-all duration-300 flex items-center gap-3 ${animationStep >= 8 ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 h-0 overflow-hidden"}`}>
-                  <span className="text-emerald-500 font-bold">✓</span> Building Product Intelligence...
-                </div>
-                <div className={`transition-all duration-300 flex items-center gap-3 ${animationStep >= 9 ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 h-0 overflow-hidden"}`}>
-                  <span className="text-emerald-500 font-bold">✓</span> Preparing comparison...
-                </div>
-                <div className={`transition-all duration-300 flex items-center gap-3 ${animationStep >= 10 ? "opacity-100 translate-x-0 text-emerald-400 font-bold mt-2" : "opacity-0 -translate-x-4 h-0 overflow-hidden"}`}>
-                  <span className="mr-1">✓</span> Done
-                </div>
+                {steps.map((step, i) => {
+                  const isActive = animationStep === i;
+                  const isDone = animationStep > i;
+                  const isVisible = animationStep >= i;
+                  return (
+                    <div
+                      key={i}
+                      className={`transition-all duration-300 flex items-center gap-3 ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 h-0 overflow-hidden"} ${isActive ? "text-indigo-300" : isDone ? "text-slate-400" : ""}`}
+                    >
+                      {isDone ? (
+                        <span className="text-emerald-500 font-bold text-base">✓</span>
+                      ) : isActive ? (
+                        <span className="animate-spin border-2 border-indigo-400/20 border-t-indigo-400 rounded-full w-4 h-4 flex-shrink-0"></span>
+                      ) : (
+                        <span className="text-slate-600 text-base">{step.icon}</span>
+                      )}
+                      <span className={isDone ? "" : isActive ? "font-semibold" : ""}>{step.text}</span>
+                    </div>
+                  );
+                })}
+                {animationStep >= steps.length && (
+                  <div className="mt-3 pt-3 border-t border-slate-800 text-emerald-400 font-bold flex items-center gap-2 transition-all duration-300">
+                    <span>✓</span> Decision complete — loading results
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -941,6 +973,220 @@ export default function ResultsPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Can You Spend Less? */}
+            {recommendation.spend_less_analysis && (
+              <div className="mt-8 bg-gradient-to-br from-emerald-950/30 to-slate-900/30 border border-emerald-800/40 rounded-3xl p-6 sm:p-8">
+                <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                  💰 Can You Spend Less?
+                </h3>
+                <p className="text-xs text-slate-400 mb-5">
+                  We found a cheaper alternative that retains {recommendation.spend_less_analysis.retained_utility_percentage.toFixed(1)}% of the winner&apos;s utility.
+                </p>
+
+                <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-5 mb-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                    <div>
+                      <h4 className="font-bold text-slate-200 text-sm">{recommendation.spend_less_analysis.name}</h4>
+                      <span className="text-emerald-400 font-black text-lg">{formatPrice(recommendation.spend_less_analysis.price, p?.symbol)}</span>
+                      <span className="text-xs text-emerald-500 ml-2 font-semibold">
+                        Save {formatPrice(recommendation.spend_less_analysis.price_savings, p?.symbol)} ({recommendation.spend_less_analysis.percentage_savings.toFixed(1)}%)
+                      </span>
+                    </div>
+                    <span className={`text-xs font-bold px-3 py-1.5 rounded-full border ${
+                      recommendation.spend_less_analysis.verdict === "Strong cheaper alternative"
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                        : recommendation.spend_less_analysis.verdict === "Worth considering"
+                        ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                        : "bg-rose-500/10 border-rose-500/30 text-rose-400"
+                    }`}>
+                      {recommendation.spend_less_analysis.verdict}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    <div className="bg-slate-900/60 rounded-lg p-3 text-center">
+                      <span className="block text-[9px] font-bold text-slate-500 uppercase">Retained Utility</span>
+                      <span className="text-sm font-black text-white">{recommendation.spend_less_analysis.retained_utility_percentage.toFixed(1)}%</span>
+                    </div>
+                    <div className="bg-slate-900/60 rounded-lg p-3 text-center">
+                      <span className="block text-[9px] font-bold text-slate-500 uppercase">Savings Efficiency</span>
+                      <span className="text-sm font-black text-white">{recommendation.spend_less_analysis.savings_efficiency.toFixed(1)}</span>
+                    </div>
+                    <div className="bg-slate-900/60 rounded-lg p-3 text-center">
+                      <span className="block text-[9px] font-bold text-slate-500 uppercase">Suitability Gap</span>
+                      <span className="text-sm font-black text-white">{recommendation.spend_less_analysis.suitability_difference.toFixed(1)}%</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-[9px] font-bold text-rose-500 uppercase block mb-1.5">What you lose</span>
+                      {recommendation.spend_less_analysis.important_spec_losses.slice(0, 3).map((loss, i) => (
+                        <div key={i} className="text-xs text-slate-400 flex items-center gap-1.5 mb-1">
+                          <span className="text-rose-400">−</span> {loss}
+                        </div>
+                      ))}
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-bold text-emerald-500 uppercase block mb-1.5">What stays the same</span>
+                      {recommendation.spend_less_analysis.important_spec_similarities.slice(0, 3).map((sim, i) => (
+                        <div key={i} className="text-xs text-slate-400 flex items-center gap-1.5 mb-1">
+                          <span className="text-emerald-400">≈</span> {sim}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => router.push(`/products/${recommendation.spend_less_analysis!.sku}`)}
+                  className="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors"
+                >
+                  View {recommendation.spend_less_analysis.name} Details →
+                </button>
+              </div>
+            )}
+
+            {/* Worth Upgrading? (Marginal Upgrade Value) */}
+            {recommendation.upgrade_analysis && (
+              <div className="mt-8 bg-gradient-to-br from-purple-950/20 to-slate-900/30 border border-purple-800/30 rounded-3xl p-6 sm:p-8">
+                <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                  🚀 Worth Upgrading?
+                </h3>
+                <p className="text-xs text-slate-400 mb-5">
+                  Evaluating {recommendation.upgrade_analysis.name} at {formatPrice(recommendation.upgrade_analysis.price, p?.symbol)} (+{formatPrice(recommendation.upgrade_analysis.extra_cost, p?.symbol)})
+                </p>
+
+                <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-5 mb-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-bold text-slate-200 text-sm">{recommendation.upgrade_analysis.name}</h4>
+                    <span className={`text-xs font-bold px-3 py-1.5 rounded-full border ${
+                      recommendation.upgrade_analysis.verdict.includes("Highly")
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                        : recommendation.upgrade_analysis.verdict.includes("Not worth")
+                        ? "bg-rose-500/10 border-rose-500/30 text-rose-400"
+                        : "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                    }`}>
+                      {recommendation.upgrade_analysis.verdict}
+                    </span>
+                  </div>
+
+                  {(recommendation.upgrade_analysis.percentage_utility_gain !== undefined) && (
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="bg-slate-900/60 rounded-lg p-3 text-center">
+                        <span className="block text-[9px] font-bold text-slate-500 uppercase">Utility Gain</span>
+                        <span className="text-sm font-black text-white">+{recommendation.upgrade_analysis.percentage_utility_gain!.toFixed(1)}%</span>
+                      </div>
+                      <div className="bg-slate-900/60 rounded-lg p-3 text-center">
+                        <span className="block text-[9px] font-bold text-slate-500 uppercase">Extra Cost</span>
+                        <span className="text-sm font-black text-white">+{formatPrice(recommendation.upgrade_analysis.extra_cost, p?.symbol)}</span>
+                      </div>
+                      <div className="bg-slate-900/60 rounded-lg p-3 text-center">
+                        <span className="block text-[9px] font-bold text-slate-500 uppercase">Gain per ₹10K</span>
+                        <span className="text-sm font-black text-white">{recommendation.upgrade_analysis.utility_gain_per_10k!.toFixed(1)}%</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <span className="text-[9px] font-bold text-purple-400 uppercase block mb-1.5">Upgrade Gains</span>
+                    {recommendation.upgrade_analysis.gains.slice(0, 4).map((gain, i) => (
+                      <div key={i} className="text-xs text-slate-400 flex items-center gap-1.5 mb-1">
+                        <span className="text-purple-400">+</span> {gain}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => router.push(`/products/${recommendation.upgrade_analysis!.sku}`)}
+                  className="text-xs font-bold text-purple-400 hover:text-purple-300 transition-colors"
+                >
+                  View {recommendation.upgrade_analysis.name} Details →
+                </button>
+              </div>
+            )}
+
+            {/* Recommendation Sensitivity Analysis */}
+            {recommendation.sensitivity_analysis && recommendation.sensitivity_analysis.length > 0 && (
+              <div className="mt-8 bg-slate-900/30 border border-slate-800/60 rounded-2xl p-6 sm:p-8">
+                <h3 className="text-lg font-bold text-slate-200 mb-2 flex items-center gap-2">
+                  🔀 What Would Change Your Winner?
+                </h3>
+                <p className="text-xs text-slate-400 mb-5">
+                  Simulated changes to your priorities that would shift the recommendation.
+                </p>
+                <div className="flex flex-col gap-3">
+                  {recommendation.sensitivity_analysis.map((trigger, i) => (
+                    <div key={i} className="bg-slate-950/40 border border-slate-850 rounded-xl p-4 flex items-center gap-4">
+                      <div className="w-8 h-8 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-sm font-bold flex-shrink-0">
+                        ⚡
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-sm text-slate-200 block">
+                          If <strong className="text-amber-400">{trigger.trigger_condition}</strong>, the winner shifts to{" "}
+                          <strong className="text-white">{trigger.alternative_winner_name}</strong>
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Reliability Breakdown */}
+            {recommendation.reliability_breakdown && (
+              <div className="mt-8 bg-slate-900/30 border border-slate-800/60 rounded-2xl p-6 sm:p-8">
+                <h3 className="text-lg font-bold text-slate-200 mb-2 flex items-center gap-2">
+                  🛡️ Recommendation Reliability
+                  {recommendation.reliability_score && (
+                    <span className="ml-auto text-2xl font-black text-emerald-400">{Math.round(recommendation.reliability_score)}%</span>
+                  )}
+                </h3>
+                <p className="text-xs text-slate-400 mb-5">
+                  A heuristic confidence score based on 6 weighted factors.
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {Object.entries(recommendation.reliability_breakdown).map(([key, value]) => {
+                    const labels: Record<string, string> = {
+                      intent_confidence: "Intent Detection",
+                      specification_coverage: "Spec Coverage",
+                      catalog_coverage: "Catalog Depth",
+                      score_margin: "Winner Margin",
+                      data_completeness: "Data Completeness",
+                      stability_score: "Stability"
+                    };
+                    const weights: Record<string, string> = {
+                      intent_confidence: "20%",
+                      specification_coverage: "15%",
+                      catalog_coverage: "15%",
+                      score_margin: "20%",
+                      data_completeness: "15%",
+                      stability_score: "15%"
+                    };
+                    return (
+                      <div key={key} className="bg-slate-950/40 border border-slate-850 p-3 rounded-xl">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[9px] font-bold text-slate-500 uppercase">{labels[key] || key}</span>
+                          <span className="text-[8px] text-slate-600 font-bold">w: {weights[key] || "—"}</span>
+                        </div>
+                        <div className="flex items-baseline gap-1 mb-1.5">
+                          <span className="text-sm font-black text-white">{Math.round(value as number)}</span>
+                          <span className="text-[9px] text-slate-500">/100</span>
+                        </div>
+                        <div className="w-full bg-slate-800 rounded-full h-1 relative overflow-hidden">
+                          <div
+                            className={`h-1 rounded-full ${(value as number) >= 85 ? "bg-emerald-500" : (value as number) >= 70 ? "bg-amber-500" : "bg-rose-500"}`}
+                            style={{ width: `${value}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
