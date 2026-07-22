@@ -17,7 +17,7 @@ from app.constants import APP_NAME
 from app.lifespan import lifespan
 from app.middleware import GlobalExceptionMiddleware
 from app.observability.middleware import ObservabilityMiddleware
-from app.routers import health, decision, product
+from app.routers import health, decision, product, feedback
 
 app = FastAPI(
     title=APP_NAME,
@@ -44,3 +44,4 @@ app.add_middleware(ObservabilityMiddleware)
 app.include_router(health.router)
 app.include_router(decision.router)
 app.include_router(product.router)
+app.include_router(feedback.router)

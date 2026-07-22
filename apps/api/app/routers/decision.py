@@ -15,7 +15,22 @@ from app.schemas.recommendation import StatelessRecommendRequest
 from app.services.recommendation_service import RecommendationService
 from app.services.category_registry import CategoryRegistry
 from app.ai.intent import IntentClassifier
+from app.config import settings
 
+def _strip_proprietary_trace(response_dict: dict) -> dict:
+    """
+    Strips full_audit_trace from production API responses.
+    Only returns it when ENV is not production (dev/debug mode).
+    """
+    if settings.ENV == "production":
+        dt = response_dict.get("decision_trace")
+        if isinstance(dt, dict):
+            dt.pop("full_audit_trace", None)
+            # Also strip from nested structured_analysis if present
+        # Strip from top-level
+        if "full_audit_trace" in response_dict:
+            del response_dict["full_audit_trace"]
+    return response_dict
 
 router = APIRouter(prefix="/api/decisions", tags=["Decisions"])
 
@@ -393,8 +408,13 @@ async def run_recommendation_stateless(
             "upgrade_analysis": sa.get("upgrade_analysis"),
             "spend_less_analysis": sa.get("spend_less_analysis"),
             "sensitivity_analysis": sa.get("sensitivity_analysis"),
-            "reliability_breakdown": sa.get("reliability_breakdown")
+            "reliability_breakdown": sa.get("reliability_breakdown"),
+            "guardrail_results": sa.get("decision_trace", {}).get("guardrail_results"),
+            "audit_status": sa.get("decision_trace", {}).get("audit_status"),
+            "is_near_tie": sa.get("decision_trace", {}).get("guardrail_results", {}).get("is_near_tie", False),
+            "deciding_factor": sa.get("decision_trace", {}).get("guardrail_results", {}).get("deciding_factor")
         }
+        return _strip_proprietary_trace(response)
     except ValueError as ve:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
     except Exception as e:

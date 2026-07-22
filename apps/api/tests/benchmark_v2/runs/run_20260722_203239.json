@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-07-22T20:32:39.269055",
+  "split_evaluated": "all",
+  "summaries": [
+    {
+      "suite": "Development",
+      "total": 2,
+      "executed": 2,
+      "top1_agreement": 100.0,
+      "budget_compliance": 100.0,
+      "hard_compliance": 100.0,
+      "stability": 100.0,
+      "avg_regret": 0.0,
+      "avg_latency_ms": 41569.1
+    },
+    {
+      "suite": "Validation",
+      "total": 1,
+      "executed": 1,
+      "top1_agreement": 0.0,
+      "budget_compliance": 100.0,
+      "hard_compliance": 100.0,
+      "stability": 100.0,
+      "avg_regret": 0.0,
+      "avg_latency_ms": 44536.2
+    },
+    {
+      "suite": "Frozen Test",
+      "total": 6,
+      "executed": 6,
+      "top1_agreement": 83.3,
+      "budget_compliance": 100.0,
+      "hard_compliance": 100.0,
+      "stability": 100.0,
+      "avg_regret": 0.0032,
+      "avg_latency_ms": 27441.0
+    }
+  ]
+}

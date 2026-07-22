@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { env } from "@/config/env";
+import { formatCurrency } from "@/lib/currency";
 
 interface Question {
   id: string;
@@ -291,7 +292,7 @@ export default function DecidePage() {
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-slate-400">Select Limit:</span>
                       <span className="text-2xl font-extrabold text-white bg-slate-900 border border-slate-800 px-4 py-1.5 rounded-lg">
-                        {currency === "inr" ? "₹" : "$"}{(answers[currentQuestion.id] !== undefined ? answers[currentQuestion.id] : (currentQuestion.options?.default ?? 1500)).toLocaleString()}
+                        {formatCurrency(answers[currentQuestion.id] !== undefined ? answers[currentQuestion.id] : (currentQuestion.options?.default ?? 1500))}
                       </span>
                     </div>
                     <input
@@ -304,8 +305,8 @@ export default function DecidePage() {
                       className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
                     />
                     <div className="flex justify-between text-xs text-slate-500">
-                      <span>{currency === "inr" ? "₹" : "$"}{(currentQuestion.options?.min || 300).toLocaleString()}</span>
-                      <span>{currency === "inr" ? "₹" : "$"}{(currentQuestion.options?.max || 5000).toLocaleString()}</span>
+                      <span>{formatCurrency(currentQuestion.options?.min || 300)}</span>
+                      <span>{formatCurrency(currentQuestion.options?.max || 5000)}</span>
                     </div>
                   </div>
                 )}

@@ -11,6 +11,8 @@ from app.services.explanation_builder import ExplanationBuilder
 from app.services.catalog_provider import LocalCatalogProvider
 from app.models.recommendation import Recommendation, RecommendationVersion
 from app.models.product import Product
+from app.services.decision_guardrails import DecisionGuardrails
+from app.services.decision_auditor import DecisionInvariantAuditor
 import structlog
 
 logger = structlog.get_logger()
@@ -48,6 +50,28 @@ class RecommendationService:
             finally:
                 # Clean up the lock to prevent memory leaks
                 RecommendationService._locks.pop(decision_id, None)
+
+    @staticmethod
+    def _determine_image_provenance(product: Any) -> Dict[str, str]:
+        if not product:
+            return {"image_url": "/images/image-unavailable.svg", "image_source": "placeholder", "image_match_level": "unavailable"}
+        specs = getattr(product, "specs", {}) or {}
+        img = specs.get("image_url") or getattr(product, "image_url", None)
+        if not img or not str(img).startswith("http") or "placeholder" in str(img).lower():
+            return {"image_url": "/images/image-unavailable.svg", "image_source": "placeholder", "image_match_level": "unavailable"}
+
+        p_name = str(getattr(product, "name", "")).lower()
+        p_brand = str(getattr(product, "brand", "") or specs.get("brand", "")).lower()
+
+        # Reject generic iPhone stock photo for non-Apple products
+        if "photo-1511707171634" in str(img):
+            if "apple" not in p_brand and "iphone" not in p_name and "apple" not in p_name:
+                return {"image_url": "/images/image-unavailable.svg", "image_source": "placeholder", "image_match_level": "unavailable"}
+
+        sku = getattr(product, "sku", "")
+        if sku and sku in img.lower():
+            return {"image_url": img, "image_source": "catalog_cdn", "image_match_level": "exact_variant"}
+        return {"image_url": img, "image_source": "catalog_cdn", "image_match_level": "product_family"}
 
     async def _generate_recommendation_internal(self, decision_id: UUID) -> Recommendation:
         logger.info("Starting upgraded recommendation pipeline", decision_id=str(decision_id))
@@ -134,6 +158,17 @@ class RecommendationService:
             currency_symbol=local_symbol,
             query=decision.title
         )
+        
+        # Apply active Decision Guardrails
+        scored_results, guardrail_log = DecisionGuardrails.evaluate(
+            scored_results,
+            answers_summary,
+            config,
+            engine,
+            trace,
+            local_symbol
+        )
+        trace["guardrail_results"] = guardrail_log
         
         is_no_match = (status == "no_match_found")
         
@@ -535,6 +570,7 @@ class RecommendationService:
                 spec_similarities.append("Core functionality")
                 
             spend_less_analysis = {
+                "status": "spend_less_available",
                 "sku": cheaper_alt.product.sku,
                 "name": cheaper_alt.product.name.split(" (")[0].strip(),
                 "price": alt_price,
@@ -547,28 +583,46 @@ class RecommendationService:
                 "important_spec_similarities": spec_similarities,
                 "verdict": spend_less_verdict
             }
+        else:
+            spend_less_analysis = {
+                "status": "no_cheaper_option_found",
+                "sku": None,
+                "name": "No lower-priced alternative found",
+                "price": 0.0,
+                "price_savings": 0.0,
+                "percentage_savings": 0.0,
+                "verdict": "Winner is already the best value candidate within this price tier"
+            }
 
-        # Build Upgrade / Worth Upgrading Analysis
+        # Build Upgrade / Worth Upgrading Analysis (Category-Agnostic across Laptop, Smartphone, Monitor)
         upgrade_analysis = None
         more_expensive = [cand for cand in scored_results if float(cand.product.price_inr) > winner_local_price]
+        if not more_expensive and len(products) > 0:
+            max_budget_limit = winner_local_price * 1.35
+            higher_prods = [p for p in products if float(p.price_inr) > winner_local_price and float(p.price_inr) <= max_budget_limit * 1.35]
+            if higher_prods:
+                scored_higher, _, _ = engine.run(higher_prods[:15], answers_summary, currency_symbol=local_symbol)
+                more_expensive = sorted([sc for sc in scored_higher if sc], key=lambda x: float(x.product.price_inr))
+
         if more_expensive:
             target_up = min(more_expensive, key=lambda x: float(x.product.price_inr))
             up_price = float(target_up.product.price_inr)
             price_diff = up_price - winner_local_price
-            
+
             absolute_utility_gain = float(target_up.score) - winner_score
             percentage_utility_gain = absolute_utility_gain * 100.0
             utility_gain_per_10k = percentage_utility_gain / (price_diff / 10000.0) if price_diff > 0 else 0.0
-            
+
             if percentage_utility_gain >= 8.0 and utility_gain_per_10k >= 4.0:
                 rec_verdict = "Highly recommended upgrade"
-            elif percentage_utility_gain >= 4.0 and utility_gain_per_10k >= 2.0:
+                up_status = "upgrade_recommended"
+            elif percentage_utility_gain >= 2.0 and utility_gain_per_10k >= 1.5:
                 rec_verdict = "Worth considering upgrade"
-            elif percentage_utility_gain < 2.0 or utility_gain_per_10k < 1.0:
-                rec_verdict = "Not worth upgrading"
+                up_status = "upgrade_recommended"
             else:
-                rec_verdict = "Optional upgrade"
-                
+                rec_verdict = "Not worth upgrading"
+                up_status = "not_worth_upgrading"
+
             up_gains = []
             for attr in config.attributes:
                 if attr.key == "price":
@@ -580,11 +634,12 @@ class RecommendationService:
                         up_gains.append(f"Better {attr.name} ({u_val} vs {w_val})")
                     elif attr.type == "cost" and u_val < w_val:
                         up_gains.append(f"Better {attr.name} ({u_val} vs {w_val})")
-                        
+
             if not up_gains:
                 up_gains.append("Slightly higher overall specifications")
-                
+
             upgrade_analysis = {
+                "status": up_status,
                 "sku": target_up.product.sku,
                 "name": target_up.product.name.split(" (")[0].strip(),
                 "price": up_price,
@@ -593,7 +648,22 @@ class RecommendationService:
                 "percentage_utility_gain": percentage_utility_gain,
                 "utility_gain_per_10k": utility_gain_per_10k,
                 "gains": up_gains,
-                "verdict": rec_verdict
+                "verdict": rec_verdict,
+                "image_provenance": RecommendationService._determine_image_provenance(target_up.product)
+            }
+        else:
+            upgrade_analysis = {
+                "status": "no_upgrade_available",
+                "sku": None,
+                "name": "No higher-tier upgrade candidate found",
+                "price": 0.0,
+                "extra_cost": 0.0,
+                "absolute_utility_gain": 0.0,
+                "percentage_utility_gain": 0.0,
+                "utility_gain_per_10k": 0.0,
+                "gains": [],
+                "verdict": "No suitable upgrade candidate found within a reasonable price range",
+                "image_provenance": RecommendationService._determine_image_provenance(None)
             }
                 
         # Build Runner-Up Battle Comparison
@@ -829,6 +899,45 @@ class RecommendationService:
             }
         }
 
+        # Run read-only Decision Invariant Auditor
+        payload_for_audit = {
+            "verdict_product": {
+                "id": str(winner.product.id),
+                "sku": winner.product.sku,
+                "name": winner.product.name,
+                "price": float(winner.product.price_inr),
+                "specs": winner.product.specs
+            },
+            "score": float(winner.score),
+            "confidence": float(winner.confidence_score)
+        }
+        audit_status, audit_violations = DecisionInvariantAuditor.audit(
+            payload_for_audit,
+            structured_analysis,
+            engine,
+            config
+        )
+        structured_analysis["decision_trace"]["audit_status"] = audit_status
+        structured_analysis["decision_trace"]["audit_violations"] = audit_violations
+
+        # 2-Tier audit tracing (full_audit_trace for dev/debug only)
+        full_audit_trace = {
+            "raw_scores": [
+                {
+                    "sku": cand.product.sku,
+                    "name": cand.product.name,
+                    "score": float(cand.score),
+                    "normalized_values": getattr(cand, 'normalized_values', {}),
+                    "raw_values": getattr(cand, 'raw_values', {}),
+                    "scoring_breakdown": getattr(cand, 'scoring_breakdown', {})
+                } for cand in scored_results
+            ],
+            "pareto_evidence": trace.get("pareto_analysis", {}).get("dominated_products", []),
+            "explanation_evidence": explanation.get("evidence", []),
+            "guardrail_log": trace.get("guardrail_results", {})
+        }
+        structured_analysis["full_audit_trace"] = full_audit_trace
+
         # 6. Commit to database
         from sqlalchemy.exc import IntegrityError
         try:
@@ -954,6 +1063,17 @@ class RecommendationService:
             currency_symbol=local_symbol,
             query=""
         )
+        
+        # Apply active Decision Guardrails
+        scored_results, guardrail_log = DecisionGuardrails.evaluate(
+            scored_results,
+            answers_summary,
+            config,
+            engine,
+            trace,
+            local_symbol
+        )
+        trace["guardrail_results"] = guardrail_log
         
         is_no_match = (status == "no_match_found")
         
@@ -1092,6 +1212,7 @@ class RecommendationService:
                 spec_similarities.append("Core functionality")
                 
             spend_less_analysis = {
+                "status": "spend_less_available",
                 "sku": cheaper_alt.product.sku,
                 "name": cheaper_alt.product.name.split(" (")[0].strip(),
                 "price": alt_price,
@@ -1104,28 +1225,46 @@ class RecommendationService:
                 "important_spec_similarities": spec_similarities,
                 "verdict": spend_less_verdict
             }
+        else:
+            spend_less_analysis = {
+                "status": "no_cheaper_option_found",
+                "sku": None,
+                "name": "No lower-priced alternative found",
+                "price": 0.0,
+                "price_savings": 0.0,
+                "percentage_savings": 0.0,
+                "verdict": "Winner is already the best value candidate within this price tier"
+            }
 
-        # Build Upgrade / Worth Upgrading Analysis
+        # Build Upgrade / Worth Upgrading Analysis (Category-Agnostic across Laptop, Smartphone, Monitor)
         upgrade_analysis = None
         more_expensive = [cand for cand in scored_results if float(cand.product.price_inr) > winner_local_price]
+        if not more_expensive and len(products) > 0:
+            max_budget_limit = winner_local_price * 1.35
+            higher_prods = [p for p in products if float(p.price_inr) > winner_local_price and float(p.price_inr) <= max_budget_limit * 1.35]
+            if higher_prods:
+                scored_higher, _, _ = engine.run(higher_prods[:15], answers_summary, currency_symbol=local_symbol)
+                more_expensive = sorted([sc for sc in scored_higher if sc], key=lambda x: float(x.product.price_inr))
+
         if more_expensive:
             target_up = min(more_expensive, key=lambda x: float(x.product.price_inr))
             up_price = float(target_up.product.price_inr)
             price_diff = up_price - winner_local_price
-            
+
             absolute_utility_gain = float(target_up.score) - winner_score
             percentage_utility_gain = absolute_utility_gain * 100.0
             utility_gain_per_10k = percentage_utility_gain / (price_diff / 10000.0) if price_diff > 0 else 0.0
-            
+
             if percentage_utility_gain >= 8.0 and utility_gain_per_10k >= 4.0:
                 rec_verdict = "Highly recommended upgrade"
-            elif percentage_utility_gain >= 4.0 and utility_gain_per_10k >= 2.0:
+                up_status = "upgrade_recommended"
+            elif percentage_utility_gain >= 2.0 and utility_gain_per_10k >= 1.5:
                 rec_verdict = "Worth considering upgrade"
-            elif percentage_utility_gain < 2.0 or utility_gain_per_10k < 1.0:
-                rec_verdict = "Not worth upgrading"
+                up_status = "upgrade_recommended"
             else:
-                rec_verdict = "Optional upgrade"
-                
+                rec_verdict = "Not worth upgrading"
+                up_status = "not_worth_upgrading"
+
             up_gains = []
             for attr in config.attributes:
                 if attr.key == "price":
@@ -1137,11 +1276,12 @@ class RecommendationService:
                         up_gains.append(f"Better {attr.name} ({u_val} vs {w_val})")
                     elif attr.type == "cost" and u_val < w_val:
                         up_gains.append(f"Better {attr.name} ({u_val} vs {w_val})")
-                        
+
             if not up_gains:
                 up_gains.append("Slightly higher overall specifications")
-                
+
             upgrade_analysis = {
+                "status": up_status,
                 "sku": target_up.product.sku,
                 "name": target_up.product.name.split(" (")[0].strip(),
                 "price": up_price,
@@ -1150,7 +1290,22 @@ class RecommendationService:
                 "percentage_utility_gain": percentage_utility_gain,
                 "utility_gain_per_10k": utility_gain_per_10k,
                 "gains": up_gains,
-                "verdict": rec_verdict
+                "verdict": rec_verdict,
+                "image_provenance": RecommendationService._determine_image_provenance(target_up.product)
+            }
+        else:
+            upgrade_analysis = {
+                "status": "no_upgrade_available",
+                "sku": None,
+                "name": "No higher-tier upgrade candidate found",
+                "price": 0.0,
+                "extra_cost": 0.0,
+                "absolute_utility_gain": 0.0,
+                "percentage_utility_gain": 0.0,
+                "utility_gain_per_10k": 0.0,
+                "gains": [],
+                "verdict": "No suitable upgrade candidate found within a reasonable price range",
+                "image_provenance": RecommendationService._determine_image_provenance(None)
             }
 
         # Build Runner-Up Battle Comparison
@@ -1610,6 +1765,45 @@ class RecommendationService:
                 ]
             }
         }
+
+        # Run read-only Decision Invariant Auditor
+        payload_for_audit = {
+            "verdict_product": {
+                "id": str(winner.product.id),
+                "sku": winner.product.sku,
+                "name": winner.product.name,
+                "price": float(winner.product.price_inr),
+                "specs": winner.product.specs
+            },
+            "score": float(winner.score),
+            "confidence": float(winner.confidence_score)
+        }
+        audit_status, audit_violations = DecisionInvariantAuditor.audit(
+            payload_for_audit,
+            structured_analysis,
+            engine,
+            config
+        )
+        structured_analysis["decision_trace"]["audit_status"] = audit_status
+        structured_analysis["decision_trace"]["audit_violations"] = audit_violations
+
+        # 2-Tier audit tracing (full_audit_trace for dev/debug only)
+        full_audit_trace = {
+            "raw_scores": [
+                {
+                    "sku": cand.product.sku,
+                    "name": cand.product.name,
+                    "score": float(cand.score),
+                    "normalized_values": getattr(cand, 'normalized_values', {}),
+                    "raw_values": getattr(cand, 'raw_values', {}),
+                    "scoring_breakdown": getattr(cand, 'scoring_breakdown', {})
+                } for cand in scored_results
+            ],
+            "pareto_evidence": trace.get("pareto_analysis", {}).get("dominated_products", []),
+            "explanation_evidence": explanation.get("evidence", []),
+            "guardrail_log": trace.get("guardrail_results", {})
+        }
+        structured_analysis["full_audit_trace"] = full_audit_trace
 
         # Format verdict_product for response
         verdict_product_data = {

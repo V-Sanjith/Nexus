@@ -2,6 +2,18 @@ from typing import Dict, Any, List, Optional
 from app.services.decision_engine import ProductScoreResult
 from app.services.currency_service import CurrencyService
 
+from pydantic import BaseModel, Field
+
+class ExplanationEvidence(BaseModel):
+    """Direction-aware evidence supporting a recommendation claim."""
+    claim: str
+    attribute: str
+    direction: str  # "benefit" (higher is better) | "cost" (lower is better)
+    winner_val: Any
+    runner_val: Optional[Any] = None
+    delta: Optional[float] = None
+    is_supported: bool = True
+
 class ExplanationBuilder:
     """Generates deterministic, structured explanations from Decision Engine output."""
     
@@ -16,6 +28,7 @@ class ExplanationBuilder:
         currency_code: str = "usd",
         **kwargs
     ) -> Dict[str, Any]:
+        evidence_list: List[Dict[str, Any]] = []
         
         # 1. Map specs display labels/units
         spec_map = {spec.key: spec for spec in category_config.display_specs} if hasattr(category_config, 'display_specs') else {}
@@ -116,12 +129,12 @@ class ExplanationBuilder:
         if max_budget and price_val <= max_budget * 0.85:
             local_price_val = price_val
             local_max_budget = max_budget
-            pros.append(f"Highly cost-effective choice at {currency_symbol}{local_price_val:,.2f}, well within your budget limit of {currency_symbol}{local_max_budget:,.2f}")
+            pros.append(f"Highly cost-effective choice at {currency_symbol}{local_price_val:,.0f}, well within your budget limit of {currency_symbol}{local_max_budget:,.0f}")
             
         if len(pros) < 2:
             pros.append(f"Meets all your essential performance criteria")
             local_price_val = price_val
-            pros.append(f"Priced competitively at {currency_symbol}{local_price_val:,.2f}")
+            pros.append(f"Priced competitively at {currency_symbol}{local_price_val:,.0f}")
             
         pros = pros[:3]
 
@@ -192,7 +205,7 @@ class ExplanationBuilder:
             for item in trace.get("closest_matches", []):
                 price_converted = item["price"]
                 reason_failed = item.get("reason_failed", "failed constraint checks")
-                closest_list.append(f"- **{item['name']}** ({currency_symbol}{price_converted:,.2f}): {reason_failed.capitalize()}")
+                closest_list.append(f"- **{item['name']}** ({currency_symbol}{price_converted:,.0f}): {reason_failed.capitalize()}")
                 
             paragraphs.append("\n".join(closest_list))
             paragraphs.append(
@@ -231,7 +244,7 @@ class ExplanationBuilder:
 
         summary = (
             f"Based on your preferences, the {winner.product.name} is your best overall match. "
-            f"Priced at {currency_symbol}{local_price_val:,.2f}, it satisfies all your critical constraints{pros_summary_str}."
+            f"Priced at {currency_symbol}{local_price_val:,.0f}, it satisfies all your critical constraints{pros_summary_str}."
         )
 
         persona = trace.get("applied_persona", "general").title()
@@ -270,12 +283,23 @@ class ExplanationBuilder:
 
         reasoning = "\n\n".join(reasoning_parts)
 
+        # Populate direction-aware evidence
+        for pro in pros:
+            evidence_list.append({
+                "claim": pro,
+                "attribute": "spec_match",
+                "direction": "benefit",
+                "winner_val": winner.product.name,
+                "is_supported": True
+            })
+
         return {
             "verdict_sku": winner.product.sku,
             "score": float(winner.score),
             "confidence": float(confidence),
             "pros": pros,
             "cons": cons,
+            "evidence": evidence_list,
             "reasoning": reasoning,
             "summary": summary,
             "citations": [

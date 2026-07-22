@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300" fill="none">
+  <rect width="400" height="300" rx="16" fill="#0F172A"/>
+  <rect x="1" y="1" width="398" height="298" rx="15" stroke="#334155" stroke-width="2" stroke-dasharray="6 6"/>
+  <path d="M160 130C160 124.477 164.477 120 170 120H230C235.523 120 240 124.477 240 130V170C240 175.523 235.523 180 230 180H170C164.477 180 160 175.523 160 170V130Z" stroke="#64748B" stroke-width="3"/>
+  <circle cx="185" cy="145" r="8" fill="#64748B"/>
+  <path d="M165 172L185 155L205 172L220 160L235 172" stroke="#64748B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="200" y="215" text-anchor="middle" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="14" font-weight="600">Image Unavailable</text>
+  <text x="200" y="235" text-anchor="middle" fill="#64748B" font-family="system-ui, sans-serif" font-size="12">Nexus Product Data Integrity</text>
+</svg>

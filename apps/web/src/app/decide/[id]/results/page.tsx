@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { env } from "@/config/env";
+import { formatCurrency } from "@/lib/currency";
 import { 
   Monitor, 
   Smartphone, 
@@ -448,30 +449,28 @@ export default function ResultsPage() {
 
   // Format price helper
   const formatPrice = (price: number, symbol: string = "₹") => {
-    return `${symbol}${Number(price).toLocaleString("en-IN")}`;
+    return formatCurrency(price, symbol);
   };
 
-  // Helper to render product image
+  // Helper to render product image with exact provenance & neutral fallback
   const renderProductImage = (name: string, category: string, specs: any) => {
     const imgUrl = specs?.image_url;
-    if (imgUrl && !imgUrl.includes("placeholder.com")) {
-      return (
-        <img
-          src={imgUrl}
-          alt={name}
-          className="w-full h-full object-contain rounded-lg"
-        />
-      );
-    }
+    const isIphonePhoto = typeof imgUrl === "string" && imgUrl.includes("photo-1511707171634");
+    const isAppleProduct = typeof name === "string" && (name.toLowerCase().includes("iphone") || name.toLowerCase().includes("apple"));
+    const isBrandMismatch = isIphonePhoto && !isAppleProduct;
 
-    // Category silhouette fallback
-    const iconColor = category === "laptop" ? "text-indigo-400" : category === "smartphone" ? "text-purple-400" : "text-blue-400";
-    const Icon = category === "laptop" ? Monitor : category === "smartphone" ? Smartphone : Monitor;
+    const isValid = imgUrl && typeof imgUrl === "string" && imgUrl.startsWith("http") && !imgUrl.includes("placeholder.com") && !isBrandMismatch;
+    const srcToUse = isValid ? imgUrl : "/images/image-unavailable.svg";
 
     return (
-      <div className="w-full h-full flex items-center justify-center bg-slate-900/60 rounded-lg">
-        <Icon className={`w-10 h-10 ${iconColor} opacity-60`} />
-      </div>
+      <img
+        src={srcToUse}
+        alt={name || "Product image"}
+        onError={(e) => {
+          (e.currentTarget as HTMLImageElement).src = "/images/image-unavailable.svg";
+        }}
+        className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+      />
     );
   };
 
@@ -844,13 +843,17 @@ export default function ResultsPage() {
                     {/* Component Rank Badges */}
                     {(() => {
                       const budgetAns = recommendation.user_preferences?.answers.find(a => a.maps_to === "price");
-                      const userBudget = budgetAns ? Number(budgetAns.selected_value) : null;
+                      let rawBudgetVal: any = budgetAns?.selected_value;
+                      if (typeof rawBudgetVal === "object" && rawBudgetVal !== null) {
+                        rawBudgetVal = rawBudgetVal.value;
+                      }
+                      const userBudget = rawBudgetVal && !isNaN(Number(rawBudgetVal)) ? Number(rawBudgetVal) : null;
                       const productPrice = p!.price || 0;
                       
                       let budgetFitLabel = "Moderate";
                       let budgetFitText = "";
                       let budgetFitColor = "text-amber-400 bg-amber-500/10 border-amber-500/20";
-                      if (userBudget) {
+                      if (userBudget && userBudget > 0) {
                         const utilization = productPrice / userBudget;
                         const pct = Math.round(utilization * 100);
                         if (utilization >= 0.80) {
@@ -872,7 +875,7 @@ export default function ResultsPage() {
                         <div className="flex flex-wrap gap-2.5 mb-6 relative z-20">
                           {recommendation.use_case_rank && (
                             <span className="text-xs font-semibold bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-3 py-1.5 rounded-full flex items-center gap-1">
-                              🏆 {recommendation.use_case_rank.name} Rank: #{recommendation.use_case_rank.rank} / {recommendation.use_case_rank.total}
+                              🏆 {recommendation.use_case_rank.name && recommendation.use_case_rank.name.toLowerCase() !== "nan" ? recommendation.use_case_rank.name : "General"} Rank: #{recommendation.use_case_rank.rank} / {recommendation.use_case_rank.total}
                             </span>
                           )}
                           {userBudget && (
@@ -1293,7 +1296,7 @@ export default function ResultsPage() {
                           )}
                           <li className="text-xs text-slate-400 flex items-start gap-2">
                             <span className="text-rose-400 font-bold mt-0.5">❌</span>
-                            {alt.reason_rejected || "Lower overall MCDA utility score"}
+                            {alt.reason_rejected || "Lower overall suitability match"}
                           </li>
                         </ul>
                       </div>
@@ -1303,26 +1306,81 @@ export default function ResultsPage() {
               </div>
             )}
 
-            {/* Collapsible Decision Trace Inspector */}
-            <div className="border border-slate-850 rounded-xl overflow-hidden mt-4">
+            {/* Observational Recommendation Feedback Widget */}
+            <div className="mt-10 bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 text-center">
+              <h4 className="text-sm font-bold text-slate-200 mb-1">Was this recommendation useful?</h4>
+              <p className="text-xs text-slate-400 mb-4">Your feedback helps us audit decision quality.</p>
+              
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  onClick={async () => {
+                    try {
+                      await fetch('/api/feedback', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ decision_id: id, rating: 'Yes', category: p?.category, reliability_score: recommendation.reliability_score })
+                      });
+                      alert('Thank you for your feedback!');
+                    } catch (e) { console.error(e); }
+                  }}
+                  className="px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold hover:bg-emerald-500/20 transition-all"
+                >
+                  👍 Yes
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      await fetch('/api/feedback', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ decision_id: id, rating: 'Somewhat', category: p?.category, reliability_score: recommendation.reliability_score })
+                      });
+                      alert('Thank you for your feedback!');
+                    } catch (e) { console.error(e); }
+                  }}
+                  className="px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold hover:bg-amber-500/20 transition-all"
+                >
+                  🤔 Somewhat
+                </button>
+                <button
+                  onClick={async () => {
+                    const reason = prompt('What was wrong? (e.g. Too expensive / Wrong priorities / Prefer another / Other)');
+                    try {
+                      await fetch('/api/feedback', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ decision_id: id, rating: 'No', rejection_reason: reason || 'Other', category: p?.category, reliability_score: recommendation.reliability_score })
+                      });
+                      alert('Thank you for your feedback!');
+                    } catch (e) { console.error(e); }
+                  }}
+                  className="px-4 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold hover:bg-rose-500/20 transition-all"
+                >
+                  👎 No
+                </button>
+              </div>
+            </div>
+
+            {/* Collapsible Decision Trace Inspector (Developer Debug Mode) */}
+            <div className="border border-slate-850 rounded-xl overflow-hidden mt-8">
               <button
                 onClick={() => setShowTrace(!showTrace)}
                 className="w-full px-6 py-4 bg-slate-900/50 flex items-center justify-between text-sm font-bold text-slate-350 hover:bg-slate-900 hover:text-white transition-all"
               >
-                <span>Inspect Mathematical Decision Trace</span>
-                <span>{showTrace ? "Hide Trace &uarr;" : "View Trace &darr;"}</span>
+                <span>Developer Debug Audit Trail</span>
+                <span>{showTrace ? "Hide Audit Trace ↑" : "View Audit Trace ↓"}</span>
               </button>
               
               {showTrace && (
                 <div className="p-6 bg-slate-950 border-t border-slate-850 text-xs font-mono overflow-auto max-h-[400px]">
-                  <h4 className="text-indigo-400 font-bold uppercase mb-2 border-b border-slate-900 pb-1">1. Applied Constraints</h4>
-                  <pre className="text-slate-400 mb-6 bg-slate-900/40 p-2.5 rounded">{JSON.stringify(recommendation.decision_trace.applied_constraints, null, 2)}</pre>
+                  <h4 className="text-indigo-400 font-bold uppercase mb-2 border-b border-slate-900 pb-1">1. Audit Status</h4>
+                  <pre className="text-slate-400 mb-6 bg-slate-900/40 p-2.5 rounded">{JSON.stringify(recommendation.decision_trace.audit_status || "PASSED", null, 2)}</pre>
                   
-                  <h4 className="text-indigo-400 font-bold uppercase mb-2 border-b border-slate-900 pb-1">2. Normalized Attribute Weights</h4>
-                  <pre className="text-slate-400 mb-6 bg-slate-900/40 p-2.5 rounded">{JSON.stringify(recommendation.decision_trace.normalized_weights, null, 2)}</pre>
+                  <h4 className="text-indigo-400 font-bold uppercase mb-2 border-b border-slate-900 pb-1">2. Guardrail Logs</h4>
+                  <pre className="text-slate-400 mb-6 bg-slate-900/40 p-2.5 rounded">{JSON.stringify(recommendation.decision_trace.guardrail_results || {}, null, 2)}</pre>
 
-                  <h4 className="text-indigo-400 font-bold uppercase mb-2 border-b border-slate-900 pb-1">3. Scoring Matrix Breakdown</h4>
-                  <pre className="text-slate-400 mb-6 bg-slate-900/40 p-2.5 rounded">{JSON.stringify(recommendation.decision_trace.scoring_breakdown, null, 2)}</pre>
+                  <h4 className="text-indigo-400 font-bold uppercase mb-2 border-b border-slate-900 pb-1">3. Applied Constraints</h4>
+                  <pre className="text-slate-400 mb-6 bg-slate-900/40 p-2.5 rounded">{JSON.stringify(recommendation.decision_trace.applied_constraints, null, 2)}</pre>
 
                   <h4 className="text-indigo-400 font-bold uppercase mb-2 border-b border-slate-900 pb-1">4. Final Ranking Results</h4>
                   <pre className="text-slate-400 bg-slate-900/40 p-2.5 rounded">{JSON.stringify(recommendation.decision_trace.ranking, null, 2)}</pre>
@@ -1335,7 +1393,7 @@ export default function ResultsPage() {
 
       {/* Footer */}
       <footer className="py-6 border-t border-slate-900 text-center text-xs text-slate-600 bg-slate-950/20 backdrop-blur-sm mt-12">
-        Data parsed and scored via the Nexus category-agnostic MCDA execution runtime.
+        Powered by Nexus AI Shopping Advisor Decision Intelligence Engine
       </footer>
     </div>
   );

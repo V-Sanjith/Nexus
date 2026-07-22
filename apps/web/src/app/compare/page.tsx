@@ -120,6 +120,14 @@ export default function ComparePage() {
                       {i === 0 && (
                         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-yellow-400" />
                       )}
+                      <div className="w-24 h-24 mx-auto mb-3 flex items-center justify-center p-2 bg-slate-950/60 rounded-xl border border-slate-800">
+                        <img
+                          src={p.specs?.image_url && typeof p.specs.image_url === "string" && p.specs.image_url.startsWith("http") ? p.specs.image_url : "/images/image-unavailable.svg"}
+                          alt={p.name}
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/images/image-unavailable.svg"; }}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
                       <div className="text-sm font-black text-white mb-2">{p.name}</div>
                       <div className="text-xl font-bold text-indigo-400 mb-4">{formatPrice(p.price_inr)}</div>
                       <button 

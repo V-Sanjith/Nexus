@@ -51,6 +51,8 @@ async def get_db_session() -> AsyncSession:
             await session.rollback()
             raise
 
+get_db = get_db_session
+
 async def init_db():
     """Initializes the database schema automatically on startup."""
     from app.models import Base

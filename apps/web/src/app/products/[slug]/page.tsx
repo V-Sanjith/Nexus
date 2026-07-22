@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { env } from "@/config/env";
+import { formatCurrency } from "@/lib/currency";
 import { toast } from "sonner";
 import { 
   ArrowLeft, Monitor, Smartphone, 
@@ -81,14 +82,6 @@ export default function ProductDetailPage() {
     );
   }
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
-
   const getCategoryIcon = (category: string) => {
     switch (category?.toLowerCase()) {
       case "laptop":
@@ -100,30 +93,29 @@ export default function ProductDetailPage() {
     }
   };
 
-  const renderProductImage = (prod: any) => {
-    const imgUrl = prod.specs?.image_url;
-    if (imgUrl && !imgUrl.includes("placeholder.com")) {
-      return (
-        <img
-          src={imgUrl}
-          alt={prod.name}
-          className="w-full h-full object-contain rounded-xl drop-shadow-2xl"
-        />
-      );
-    }
+  const formatPrice = (price: number) => {
+    return formatCurrency(price, "₹");
+  };
 
-    const bgGradient =
-      prod.category === "laptop"
-        ? "from-indigo-500/10 to-blue-500/5"
-        : prod.category === "smartphone"
-        ? "from-purple-500/10 to-pink-500/5"
-        : "from-blue-500/10 to-cyan-500/5";
+  const renderProductImage = (prod: any) => {
+    const imgUrl = prod?.specs?.image_url;
+    const isIphonePhoto = typeof imgUrl === "string" && imgUrl.includes("photo-1511707171634");
+    const name = prod?.name || "";
+    const isAppleProduct = typeof name === "string" && (name.toLowerCase().includes("iphone") || name.toLowerCase().includes("apple"));
+    const isBrandMismatch = isIphonePhoto && !isAppleProduct;
+
+    const isValid = imgUrl && typeof imgUrl === "string" && imgUrl.startsWith("http") && !imgUrl.includes("placeholder.com") && !isBrandMismatch;
+    const srcToUse = isValid ? imgUrl : "/images/image-unavailable.svg";
 
     return (
-      <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br ${bgGradient} border border-slate-800/50 rounded-xl p-8 gap-4`}>
-        {getCategoryIcon(prod.category)}
-        <span className="text-slate-400 text-sm text-center font-medium">{prod.name}</span>
-      </div>
+      <img
+        src={srcToUse}
+        alt={prod?.name || "Product image"}
+        onError={(e) => {
+          (e.currentTarget as HTMLImageElement).src = "/images/image-unavailable.svg";
+        }}
+        className="w-full h-full object-contain p-4 rounded-xl drop-shadow-2xl"
+      />
     );
   };
 

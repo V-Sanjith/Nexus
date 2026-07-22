@@ -319,31 +319,61 @@ async def run_scenario_suite(suite_name, scenarios):
     return summary
 
 
+import argparse
+from datetime import datetime
+
 async def main():
-    os.makedirs("tests/benchmark_v2", exist_ok=True)
+    parser = argparse.ArgumentParser(description="Nexus Benchmark V2 Runner")
+    parser.add_argument("--split", choices=["dev", "val", "frozen", "all"], default="all", help="Dataset split to evaluate")
+    args = parser.parse_args()
+
+    os.makedirs("tests/benchmark_v2/runs", exist_ok=True)
+    
+    # Save frozen scenarios safely without overwriting if already exists
     with open("tests/benchmark_v2/scenarios_dev.json", "w") as f:
         json.dump(SCENARIOS_DEV, f, indent=2)
     with open("tests/benchmark_v2/scenarios_val.json", "w") as f:
         json.dump(SCENARIOS_VAL, f, indent=2)
-    with open("tests/benchmark_v2/scenarios_test_frozen.json", "w") as f:
-        json.dump(SCENARIOS_TEST_FROZEN, f, indent=2)
-    print("Benchmark V2 scenario files saved to tests/benchmark_v2/\n")
+    if not os.path.exists("tests/benchmark_v2/scenarios_test_frozen.json"):
+        with open("tests/benchmark_v2/scenarios_test_frozen.json", "w") as f:
+            json.dump(SCENARIOS_TEST_FROZEN, f, indent=2)
+    print("Benchmark V2 scenarios initialized.\n")
 
-    dev = await run_scenario_suite("Development", SCENARIOS_DEV)
-    val = await run_scenario_suite("Validation", SCENARIOS_VAL)
-    frozen = await run_scenario_suite("Frozen Test", SCENARIOS_TEST_FROZEN)
+    summaries = []
+
+    if args.split in ["dev", "all"]:
+        dev = await run_scenario_suite("Development", SCENARIOS_DEV)
+        summaries.append(dev)
+    if args.split in ["val", "all"]:
+        val = await run_scenario_suite("Validation", SCENARIOS_VAL)
+        summaries.append(val)
+    if args.split in ["frozen", "all"]:
+        frozen = await run_scenario_suite("Frozen Test", SCENARIOS_TEST_FROZEN)
+        summaries.append(frozen)
 
     print(f"\n{'='*75}")
     print(f"  BENCHMARK V2 FINAL REPORT")
     print(f"{'='*75}")
     print(f"  {'Split':<14} | {'Top-1':>6} | {'Budget':>7} | {'Hard':>6} | {'Stable':>7} | {'Regret':>7} | {'Latency':>8}")
     print(f"  {'-'*14}-+-{'-'*6}-+-{'-'*7}-+-{'-'*6}-+-{'-'*7}-+-{'-'*7}-+-{'-'*8}")
-    for s in [dev, val, frozen]:
+    for s in summaries:
         if s["executed"] > 0:
             print(f"  {s['suite']:<14} | {s['top1_agreement']:5.1f}% | {s['budget_compliance']:6.1f}% | {s['hard_compliance']:5.1f}% | {s['stability']:6.1f}% | {s['avg_regret']:7.4f} | {s['avg_latency_ms']:6.0f}ms")
         else:
             print(f"  {s['suite']:<14} | {'ERR':>6} | {'ERR':>7} | {'ERR':>6} | {'ERR':>7} | {'ERR':>7} | {'ERR':>8}")
     print(f"{'='*75}")
+
+    # Write timestamped run record
+    timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_file = f"tests/benchmark_v2/runs/run_{timestamp_str}.json"
+    run_record = {
+        "timestamp": datetime.now().isoformat(),
+        "split_evaluated": args.split,
+        "summaries": summaries
+    }
+    with open(run_file, "w") as f:
+        json.dump(run_record, f, indent=2)
+    print(f"\nSaved benchmark run record to {run_file}\n")
 
 
 if __name__ == "__main__":

@@ -1115,20 +1115,45 @@ class DecisionEngine:
                 if priorities.get(attr.key, 3.0) >= 1.0:
                     pareto_attributes.append(attr)
 
+        # Performance Optimization: If pool is huge (> 250 items), pre-sort by a fast heuristic
+        # to focus Pareto dominance analysis on the top candidates, preventing O(N^2) slowdown.
+        if len(pool) > 250:
+            # Quick spec score for pre-ranking
+            def _quick_spec_score(p):
+                score = 0.0
+                for a in pareto_attributes:
+                    val = self._get_spec_val(p, a.key)
+                    if val is not None:
+                        score += val if a.type == "benefit" else -val
+                return score
+
+            sorted_pool = sorted(pool, key=lambda p: (float(p.price_inr), -_quick_spec_score(p)))
+            pareto_eval_pool = sorted_pool[:250]
+        else:
+            pareto_eval_pool = pool
+
+        # Pre-cache spec values into memory tuples for blazing fast O(1) attribute lookup
+        cached_specs = {}
+        for p in pareto_eval_pool:
+            cached_specs[p.sku] = (
+                float(p.price_inr),
+                {attr.key: (self._get_spec_val(p, attr.key), attr.type, attr.name) for attr in pareto_attributes}
+            )
+
         dominated_products = []
         dominated_skus = set()
 
-        for p_b in pool:
+        for p_b in pareto_eval_pool:
             is_dominated = False
             dominator = None
             reasons = []
+            price_b, specs_b = cached_specs[p_b.sku]
 
-            for p_a in pool:
+            for p_a in pareto_eval_pool:
                 if p_a.sku == p_b.sku:
                     continue
 
-                price_a = float(p_a.price_inr)
-                price_b = float(p_b.price_inr)
+                price_a, specs_a = cached_specs[p_a.sku]
 
                 # 1. Price check (cost attribute: lower is better)
                 if price_a > price_b:
@@ -1143,29 +1168,27 @@ class DecisionEngine:
                     better_reasons.append(f"cheaper (₹{price_a:,.0f} vs ₹{price_b:,.0f})")
 
                 # 2. Check specs
-                for attr in pareto_attributes:
-                    val_a = self._get_spec_val(p_a, attr.key)
-                    val_b = self._get_spec_val(p_b, attr.key)
+                for attr_key, (val_a, attr_type, attr_name) in specs_a.items():
+                    val_b = specs_b[attr_key][0]
 
                     if val_a is None or val_b is None:
-                        # Safety: missing data prevents dominance assumption
                         equal_or_better = False
                         break
 
-                    if attr.type == "benefit":
+                    if attr_type == "benefit":
                         if val_a < val_b:
                             equal_or_better = False
                             break
                         elif val_a > val_b:
                             strictly_better = True
-                            better_reasons.append(f"higher {attr.name} ({val_a} vs {val_b})")
-                    elif attr.type == "cost":
+                            better_reasons.append(f"higher {attr_name} ({val_a} vs {val_b})")
+                    elif attr_type == "cost":
                         if val_a > val_b:
                             equal_or_better = False
                             break
                         elif val_a < val_b:
                             strictly_better = True
-                            better_reasons.append(f"lower {attr.name} ({val_a} vs {val_b})")
+                            better_reasons.append(f"lower {attr_name} ({val_a} vs {val_b})")
 
                 if equal_or_better and strictly_better:
                     is_dominated = True
@@ -1177,11 +1200,13 @@ class DecisionEngine:
                 dominated_products.append({
                     "sku": p_b.sku,
                     "name": p_b.name,
-                    "price": float(p_b.price_inr),
+                    "price": price_b,
                     "dominated_by": dominator.sku,
                     "dominated_by_name": dominator.name,
                     "dominated_by_price": float(dominator.price_inr),
-                    "reason": f"Dominated by {dominator.name} which is " + ", ".join(reasons)
+                    "evidence": better_reasons,
+                    "dimensions_checked": [attr.key for attr in pareto_attributes],
+                    "reason": f"Dominated by {dominator.name} which is " + ", ".join(better_reasons)
                 })
                 dominated_skus.add(p_b.sku)
 

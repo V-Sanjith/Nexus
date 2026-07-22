@@ -12,6 +12,7 @@ from app.models.conversation import Conversation, Message
 from app.models.share_link import ShareLink
 from app.models.feature_flag import FeatureFlag
 from app.models.audit_log import AuditLog
+from app.models.feedback import UserFeedback
 
 __all__ = [
     "Base",
@@ -32,5 +33,6 @@ __all__ = [
     "Message",
     "ShareLink",
     "FeatureFlag",
-    "AuditLog"
+    "AuditLog",
+    "UserFeedback"
 ]
