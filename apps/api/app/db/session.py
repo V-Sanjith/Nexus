@@ -674,7 +674,7 @@ async def seed_database():
                 "known_pros": ["Superb gaming frame rates and thermal vapor chamber", "Incredible 100W wired / 50W wireless charging", "Vast 6000mAh battery capacity"],
                 "known_cons": ["Telephoto zoom lens is basic", "Alert slider gathers pocket lint easily"],
                 "known_issues": ["Display switches aggressively between refresh rates under battery saver"],
-                "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80",
+                "image_url": "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=500&q=80",
                 "base_price": 799.0,
                 "configs": [
                     {"ram": 12, "storage": 256, "processor": "Snapdragon 8 Gen 4", "processor_score": 9600, "camera_mp": 50.0, "battery_mah": 6000, "screen_size": 6.82, "price_adjust": 0.0},    # approx ₹66,317
@@ -867,7 +867,7 @@ async def seed_database():
                 "known_pros": ["Stunning 2K 120Hz display screen", "Exceptional Snapdragon 8 Gen 3 performance", "Huge 5400mAh battery with 100W charging"],
                 "known_cons": ["Large camera bump is heavy", "USB-C port alert slider collects dust"],
                 "known_issues": ["Occasional refresh rate drop in heavy multitasking"],
-                "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80",
+                "image_url": "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=500&q=80",
                 "base_price": 539.0,
                 "configs": [
                     {"ram": 12, "storage": 256, "processor": "Snapdragon 8 Gen 3", "processor_score": 9500, "camera_mp": 50.0, "battery_mah": 5400, "screen_size": 6.82, "price_adjust": 0.0},    # approx ₹52,822
