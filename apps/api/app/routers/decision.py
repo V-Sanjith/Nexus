@@ -463,4 +463,14 @@ async def get_intent_parsing(q: str):
             "confidence": 40.0
         }
 
+@router.get("/admin/catalog/health", status_code=status.HTTP_200_OK)
+async def get_catalog_health(
+    db: AsyncSession = Depends(get_db)
+):
+    """Internal admin health endpoint reporting catalog data completeness and quality metrics."""
+    from app.services.catalog_dashboard import CatalogHealthDashboardService
+    dashboard_service = CatalogHealthDashboardService(db)
+    metrics = await dashboard_service.get_health_metrics()
+    return metrics
+
 

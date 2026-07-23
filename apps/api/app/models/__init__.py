@@ -13,6 +13,8 @@ from app.models.share_link import ShareLink
 from app.models.feature_flag import FeatureFlag
 from app.models.audit_log import AuditLog
 from app.models.feedback import UserFeedback
+from app.models.price_observation import PriceObservation
+from app.models.catalog_ingestion import CatalogIngestion
 
 __all__ = [
     "Base",
@@ -34,5 +36,7 @@ __all__ = [
     "ShareLink",
     "FeatureFlag",
     "AuditLog",
-    "UserFeedback"
+    "UserFeedback",
+    "PriceObservation",
+    "CatalogIngestion"
 ]

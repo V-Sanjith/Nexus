@@ -17,25 +17,17 @@ class CatalogProvider(ABC):
 
 
 class LocalCatalogProvider(CatalogProvider):
-    """Accesses the locally seeded database catalog using SQLAlchemy repositories."""
+    """Accesses the locally seeded database catalog using SQLAlchemy repositories and eligibility policy."""
 
     def __init__(self, session: AsyncSession):
         self.repo = SQLAlchemyProductRepository(session)
 
     async def get_products(self, category: str, query: Optional[str] = None, subtype: Optional[str] = None) -> List[Product]:
+        from app.services.production_policy import ProductionEligibilityPolicy
         logger.info("LocalCatalogProvider retrieving products", category=category, subtype=subtype)
         products = await self.repo.get_by_category(category, limit=None, subtype=subtype)
         
-        # Exclude blacklisted products (e.g., OnePlus Nord 4 as requested by the user because it is not available)
-        blacklist = ["nord 4", "nord4", "nord-4"]
-        filtered_products = []
-        for p in products:
-            name_lower = p.name.lower()
-            sku_lower = p.sku.lower()
-            if any(b in name_lower or b in sku_lower for b in blacklist):
-                logger.info("Excluding blacklisted product from catalog", name=p.name, sku=p.sku)
-                continue
-            filtered_products.append(p)
+        filtered_products = [p for p in products if ProductionEligibilityPolicy.is_eligible(p)]
         return filtered_products
 
 

@@ -43,10 +43,14 @@ class SQLAlchemyProductRepository(IProductRepository):
         return result.scalars().first()
 
     async def get_by_category(self, category: str, skip: int = 0, limit: Optional[int] = None, subtype: Optional[str] = None) -> List[Product]:
+        from app.config import settings
         stmt = select(Product).where(
             Product.category == category, 
-            Product.is_active == True
+            Product.is_active == True,
+            Product.ingestion_status == "recommendation_eligible"
         )
+        if getattr(settings, "CATALOG_MODE", "production").lower() == "production":
+            stmt = stmt.where(Product.source_type.in_(["real_seed", "web_enrichment_verified", "manual_verified", "manual"]))
         if subtype and subtype != "general":
             db_subtype = subtype
             if category == "laptop":

@@ -55,8 +55,11 @@ class RecommendationService:
     def _determine_image_provenance(product: Any) -> Dict[str, str]:
         if not product:
             return {"image_url": "/images/image-unavailable.svg", "image_source": "placeholder", "image_match_level": "unavailable"}
+        
+        match_level = getattr(product, "image_match_level", None) or "unverified"
         specs = getattr(product, "specs", {}) or {}
-        img = specs.get("image_url") or getattr(product, "image_url", None)
+        img = getattr(product, "image_url", None) or specs.get("image_url")
+        
         if not img or not str(img).startswith("http") or "placeholder" in str(img).lower():
             return {"image_url": "/images/image-unavailable.svg", "image_source": "placeholder", "image_match_level": "unavailable"}
 
@@ -68,10 +71,15 @@ class RecommendationService:
             if "apple" not in p_brand and "iphone" not in p_name and "apple" not in p_name:
                 return {"image_url": "/images/image-unavailable.svg", "image_source": "placeholder", "image_match_level": "unavailable"}
 
-        sku = getattr(product, "sku", "")
-        if sku and sku in img.lower():
-            return {"image_url": img, "image_source": "catalog_cdn", "image_match_level": "exact_variant"}
-        return {"image_url": img, "image_source": "catalog_cdn", "image_match_level": "product_family"}
+        # Limited Beta Policy: Only display verified_exact_variant or verified_exact_model (or explicitly confirmed verified_product_family)
+        if match_level in ["verified_exact_variant", "verified_exact_model"]:
+            return {"image_url": img, "image_source": "catalog_cdn", "image_match_level": match_level}
+        elif match_level == "verified_product_family":
+            if p_brand in ["apple", "samsung", "dell", "hp", "lenovo", "asus", "acer", "google", "oneplus"]:
+                return {"image_url": img, "image_source": "catalog_cdn", "image_match_level": "verified_product_family"}
+            return {"image_url": "/images/image-unavailable.svg", "image_source": "placeholder", "image_match_level": "unverified"}
+        else:
+            return {"image_url": "/images/image-unavailable.svg", "image_source": "placeholder", "image_match_level": match_level}
 
     async def _generate_recommendation_internal(self, decision_id: UUID) -> Recommendation:
         logger.info("Starting upgraded recommendation pipeline", decision_id=str(decision_id))

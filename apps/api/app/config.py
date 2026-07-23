@@ -29,6 +29,10 @@ class Settings(BaseSettings):
         default="redis://localhost:6379/0"
     )
 
+    # Catalog & Ingestion Governance
+    CATALOG_MODE: str = Field(default="production") # "production" | "test"
+    ENABLE_CATALOG_ENRICHMENT: bool = Field(default=False)
+
     # AI Provider
     GEMINI_API_KEY: Optional[str] = Field(default=None)
 

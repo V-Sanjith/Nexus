@@ -183,7 +183,8 @@ async def seed_database():
         # =====================================================================
         # 1. LAPTOPS DEFINITIONS (13 Realistic base models with specific configs)
         # =====================================================================
-        base_laptops = [
+        base_laptops = [{'name': 'Apple MacBook Air 13 M3', 'brand': 'Apple', 'laptop_type': 'ultrabook', 'manufacturer': 'Apple', 'model_number': 'MRXV3', 'operating_system': 'macOS Sonoma', 'linux_supported': False, 'gpu_type': 'integrated', 'cooling_score': 8.0, 'panel_type': 'IPS', 'brightness_nits': 500, 'srgb_coverage': 100.0, 'adobe_rgb_coverage': 85.0, 'dci_p3_coverage': 100.0, 'color_accuracy_delta_e': 1.1, 'battery_capacity_wh': 52.6, 'weight_kg': 1.24, 'upgradeability': {'ram': False, 'ssd': False}, 'repairability_score': 4.0, 'known_pros': ['Silent fanless build', 'Incredible battery endurance up to 18 hours', 'Vibrant Retina screen display'], 'known_cons': ['Base model has only 8GB RAM', 'Supports only one external display natively'], 'known_issues': ['Thermal throttling under sustained multi-core rendering'], 'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500&q=80', 'base_price': 1099.0, 'configs': [{'ram': 8, 'storage': 256, 'cpu': 'Apple M3 8-Core', 'gpu': 'm3', 'refresh': 60, 'price_adjust': 0.0}, {'ram': 16, 'storage': 512, 'cpu': 'Apple M3 8-Core', 'gpu': 'm3', 'refresh': 60, 'price_adjust': 400.0}, {'ram': 24, 'storage': 512, 'cpu': 'Apple M3 8-Core', 'gpu': 'm3', 'refresh': 60, 'price_adjust': 600.0}]}, {'name': 'Apple MacBook Pro 14 M3 Pro', 'brand': 'Apple', 'laptop_type': 'creator', 'manufacturer': 'Apple', 'model_number': 'MRX33', 'operating_system': 'macOS Sonoma', 'linux_supported': False, 'gpu_type': 'integrated', 'cooling_score': 9.2, 'panel_type': 'Mini-LED', 'brightness_nits': 1000, 'srgb_coverage': 100.0, 'adobe_rgb_coverage': 90.0, 'dci_p3_coverage': 100.0, 'color_accuracy_delta_e': 0.8, 'battery_capacity_wh': 72.4, 'weight_kg': 1.61, 'upgradeability': {'ram': False, 'ssd': False}, 'repairability_score': 4.5, 'known_pros': ['Best-in-class Liquid Retina XDR 120Hz display', 'Superb 18-core GPU performance', 'Full HDMI & SD card slot'], 'known_cons': ['Heavy for 14-inch form factor', 'Expensive upgrades'], 'known_issues': ['Slight blooming on high-contrast HDR content'], 'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500&q=80', 'base_price': 1999.0, 'configs': [{'ram': 18, 'storage': 512, 'cpu': 'Apple M3 Pro 11-Core', 'gpu': 'm3 pro', 'refresh': 120, 'price_adjust': 0.0}, {'ram': 36, 'storage': 1024, 'cpu': 'Apple M3 Pro 12-Core', 'gpu': 'm3 pro', 'refresh': 120, 'price_adjust': 600.0}]}, {'name': 'Dell Inspiron 15 3530', 'brand': 'Dell', 'laptop_type': 'student', 'manufacturer': 'Dell', 'model_number': '3530-i5', 'operating_system': 'Windows 11 Home', 'linux_supported': True, 'gpu_type': 'integrated', 'cooling_score': 6.8, 'panel_type': 'IPS', 'brightness_nits': 250, 'srgb_coverage': 60.0, 'adobe_rgb_coverage': 42.0, 'dci_p3_coverage': 42.0, 'color_accuracy_delta_e': 3.5, 'battery_capacity_wh': 41.0, 'weight_kg': 1.65, 'upgradeability': {'ram': True, 'ssd': True}, 'repairability_score': 8.0, 'known_pros': ['Affordable student pricing', 'Comfortable keyboard deck', 'Full numeric keypad'], 'known_cons': ['Small battery capacity', 'Muted display colors'], 'known_issues': ['Touchpad can feel stiff at corners'], 'image_url': 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=500&q=80', 'base_price': 499.0, 'configs': [{'ram': 8, 'storage': 512, 'cpu': 'Intel Core i5-1335U', 'gpu': 'intel iris xe', 'refresh': 120, 'price_adjust': 0.0}, {'ram': 16, 'storage': 512, 'cpu': 'Intel Core i5-1335U', 'gpu': 'intel iris xe', 'refresh': 120, 'price_adjust': 60.0}]}, {'name': 'Dell Alienware m16 R2', 'brand': 'Dell', 'laptop_type': 'gaming', 'manufacturer': 'Dell', 'model_number': 'm16-R2', 'operating_system': 'Windows 11 Home', 'linux_supported': True, 'gpu_type': 'dedicated', 'cooling_score': 9.1, 'panel_type': 'IPS', 'brightness_nits': 300, 'srgb_coverage': 100.0, 'adobe_rgb_coverage': 80.0, 'dci_p3_coverage': 100.0, 'color_accuracy_delta_e': 1.8, 'battery_capacity_wh': 90.0, 'weight_kg': 2.61, 'upgradeability': {'ram': True, 'ssd': True}, 'repairability_score': 7.5, 'known_pros': ['Redesigned stealth mode chassis', 'Massive 240Hz QHD+ gaming panel', 'Cryo-tech cooling vapor chamber'], 'known_cons': ['Heavy power adapter brick', 'High price tier'], 'known_issues': ['AlienFX lighting sync bug after sleep'], 'image_url': 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=500&q=80', 'base_price': 2199.0, 'configs': [{'ram': 16, 'storage': 1024, 'cpu': 'Intel Core Ultra 7 155H', 'gpu': 'rtx 4070', 'refresh': 240, 'price_adjust': 0.0}, {'ram': 32, 'storage': 1024, 'cpu': 'Intel Core Ultra 9 185H', 'gpu': 'rtx 4080', 'refresh': 240, 'price_adjust': 500.0}]}, {'name': 'ASUS Zenbook 14 OLED', 'brand': 'ASUS', 'laptop_type': 'ultrabook', 'manufacturer': 'ASUS', 'model_number': 'UX3405', 'operating_system': 'Windows 11 Home', 'linux_supported': True, 'gpu_type': 'integrated', 'cooling_score': 8.1, 'panel_type': 'OLED', 'brightness_nits': 500, 'srgb_coverage': 100.0, 'adobe_rgb_coverage': 95.0, 'dci_p3_coverage': 100.0, 'color_accuracy_delta_e': 0.9, 'battery_capacity_wh': 75.0, 'weight_kg': 1.2, 'upgradeability': {'ram': False, 'ssd': True}, 'repairability_score': 7.0, 'known_pros': ['Stunning 3K 120Hz OLED screen', 'Ultra-lightweight aluminum body', 'Intel Arc graphics built-in'], 'known_cons': ['Soldered LPDDR5X RAM', 'Glossy screen glare under bright sunlight'], 'known_issues': ['OLED pixel shift feature slightly shifts static icons'], 'image_url': 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=500&q=80', 'base_price': 999.0, 'configs': [{'ram': 16, 'storage': 512, 'cpu': 'Intel Core Ultra 7 155H', 'gpu': 'intel arc', 'refresh': 120, 'price_adjust': 0.0}, {'ram': 32, 'storage': 1024, 'cpu': 'Intel Core Ultra 7 155H', 'gpu': 'intel arc', 'refresh': 120, 'price_adjust': 250.0}]}, {'name': 'Acer Predator Helios Neo 16', 'brand': 'Acer', 'laptop_type': 'gaming', 'manufacturer': 'Acer', 'model_number': 'PHN16-72', 'operating_system': 'Windows 11 Home', 'linux_supported': True, 'gpu_type': 'dedicated', 'cooling_score': 8.7, 'panel_type': 'IPS', 'brightness_nits': 500, 'srgb_coverage': 100.0, 'adobe_rgb_coverage': 78.0, 'dci_p3_coverage': 80.0, 'color_accuracy_delta_e': 1.9, 'battery_capacity_wh': 90.0, 'weight_kg': 2.6, 'upgradeability': {'ram': True, 'ssd': True}, 'repairability_score': 8.0, 'known_pros': ['Unbeatable price-to-performance RTX 4060', '500 nits high brightness display', '5th Gen AeroBlade 3D fans'], 'known_cons': ['Loud turbo fan profiles', 'Bulky chassis design'], 'known_issues': ['PredatorSense app uses noticeable idle CPU'], 'image_url': 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=500&q=80', 'base_price': 1199.0, 'configs': [{'ram': 16, 'storage': 1024, 'cpu': 'Intel Core i7-14700HX', 'gpu': 'rtx 4060', 'refresh': 165, 'price_adjust': 0.0}, {'ram': 32, 'storage': 1024, 'cpu': 'Intel Core i7-14700HX', 'gpu': 'rtx 4070', 'refresh': 240, 'price_adjust': 350.0}]},
+
             {
                 "name": "HP Victus 15",
                 "brand": "HP",
@@ -627,7 +628,8 @@ async def seed_database():
         # =====================================================================
         # 2. SMARTPHONES DEFINITIONS (8 Realistic models)
         # =====================================================================
-        base_smartphones = [
+        base_smartphones = [{'name': 'Apple iPhone 15', 'brand': 'Apple', 'phone_type': 'flagship', 'manufacturer': 'Apple', 'model_number': 'A3090', 'build_score': 9.0, 'known_pros': ['Dynamic Island interactive header', '48MP main camera with 2x optical zoom crop', 'USB-C port standard'], 'known_cons': ['Display is limited to 60Hz refresh rate', 'Charging cap at 20W'], 'known_issues': ['Slight heat under initial iCloud setup restoration'], 'image_url': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80', 'base_price': 799.0, 'configs': [{'ram': 6, 'storage': 128, 'processor': 'Apple A16 Bionic', 'processor_score': 9100, 'camera_mp': 48.0, 'battery_mah': 3349, 'screen_size': 6.1, 'price_adjust': 0.0}, {'ram': 6, 'storage': 256, 'processor': 'Apple A16 Bionic', 'processor_score': 9100, 'camera_mp': 48.0, 'battery_mah': 3349, 'screen_size': 6.1, 'price_adjust': 100.0}]}, {'name': 'Apple iPhone 15 Pro Max', 'brand': 'Apple', 'phone_type': 'flagship', 'manufacturer': 'Apple', 'model_number': 'A3106', 'build_score': 9.3, 'known_pros': ['Grade 5 Titanium frame lighter design', '5x tetraprism optical zoom lens', 'Action button customization'], 'known_cons': ['High baseline purchase price', 'Slight lens reflection in dark video scenes'], 'known_issues': ['Early iOS versions experienced thermal spikes (fixed in 17.0.3)'], 'image_url': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80', 'base_price': 1199.0, 'configs': [{'ram': 8, 'storage': 256, 'processor': 'Apple A17 Pro', 'processor_score': 9800, 'camera_mp': 48.0, 'battery_mah': 4422, 'screen_size': 6.7, 'price_adjust': 0.0}, {'ram': 8, 'storage': 512, 'processor': 'Apple A17 Pro', 'processor_score': 9800, 'camera_mp': 48.0, 'battery_mah': 4422, 'screen_size': 6.7, 'price_adjust': 200.0}]}, {'name': 'Samsung Galaxy S24 Ultra', 'brand': 'Samsung', 'phone_type': 'flagship', 'manufacturer': 'Samsung', 'model_number': 'SM-S928B', 'build_score': 9.4, 'known_pros': ['Built-in S Pen stylus support', 'Anti-reflective Corning Gorilla Armor glass', '200MP camera sensor with 100x Space Zoom'], 'known_cons': ['Large square boxy corners', 'Heavy 232g chassis weight'], 'known_issues': ['Vivid screen color profile was initially muted (fixed via toggle)'], 'image_url': 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=500&q=80', 'base_price': 1299.0, 'configs': [{'ram': 12, 'storage': 256, 'processor': 'Snapdragon 8 Gen 3 for Galaxy', 'processor_score': 9650, 'camera_mp': 200.0, 'battery_mah': 5000, 'screen_size': 6.8, 'price_adjust': 0.0}, {'ram': 12, 'storage': 512, 'processor': 'Snapdragon 8 Gen 3 for Galaxy', 'processor_score': 9650, 'camera_mp': 200.0, 'battery_mah': 5000, 'screen_size': 6.8, 'price_adjust': 150.0}]}, {'name': 'Google Pixel 8a', 'brand': 'Google', 'phone_type': 'photography', 'manufacturer': 'Google', 'model_number': 'G6GWS', 'build_score': 8.2, 'known_pros': ['Best-in-class camera photos under $500', '7 years of OS updates guaranteed', 'Smooth 120Hz OLED screen'], 'known_cons': ['Thick display bezels', 'Charging speeds capped at 18W'], 'known_issues': ['Tensor G3 runs warm during 4K video recording'], 'image_url': 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=500&q=80', 'base_price': 499.0, 'configs': [{'ram': 8, 'storage': 128, 'processor': 'Tensor G3', 'processor_score': 7800, 'camera_mp': 64.0, 'battery_mah': 4492, 'screen_size': 6.1, 'price_adjust': 0.0}, {'ram': 8, 'storage': 256, 'processor': 'Tensor G3', 'processor_score': 7800, 'camera_mp': 64.0, 'battery_mah': 4492, 'screen_size': 6.1, 'price_adjust': 60.0}]}, {'name': 'Xiaomi 14', 'brand': 'Xiaomi', 'phone_type': 'photography', 'manufacturer': 'Xiaomi', 'model_number': '23127PN0CG', 'build_score': 8.9, 'known_pros': ['Leica Summilux triple 50MP optical lenses', 'Compact 6.36-inch form factor hold', '120W HyperCharge included'], 'known_cons': ['HyperOS UI has bloatware pre-installed', 'No eSIM support in some regions'], 'known_issues': ['Camera lens fogging under rapid temp drops (rare)'], 'image_url': 'https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=500&q=80', 'base_price': 899.0, 'configs': [{'ram': 12, 'storage': 512, 'processor': 'Snapdragon 8 Gen 3', 'processor_score': 9550, 'camera_mp': 50.0, 'battery_mah': 4610, 'screen_size': 6.36, 'price_adjust': 0.0}]},
+
             {
                 "name": "Samsung Galaxy S25 Ultra",
                 "brand": "Samsung",
@@ -896,7 +898,8 @@ async def seed_database():
         # =====================================================================
         # 3. MONITORS DEFINITIONS (7 Realistic models)
         # =====================================================================
-        base_monitors = [
+        base_monitors = [{'name': 'ASUS ROG Swift PG27AQN', 'brand': 'ASUS', 'monitor_type': 'gaming', 'manufacturer': 'ASUS', 'model_number': 'PG27AQN', 'build_score': 9.3, 'known_pros': ['Extreme 360Hz refresh rate at 1440p', 'Ultrafast IPS panel with 1ms response', 'NVIDIA Reflex Analyzer built-in'], 'known_cons': ['High premium price for esports monitor', 'No internal speakers'], 'known_issues': ['Active cooling fan runs softly inside monitor housing'], 'image_url': 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500&q=80', 'base_price': 899.0, 'configs': [{'size': 27.0, 'res': 1440, 'refresh': 360, 'panel_score': 9.5, 'color_accuracy_delta_e': 1.2, 'response_time_ms': 1.0, 'panel_type': 'IPS', 'price_adjust': 0.0}]}, {'name': 'LG 27GP850-B UltraGear', 'brand': 'LG', 'monitor_type': 'gaming', 'manufacturer': 'LG', 'model_number': '27GP850-B', 'build_score': 8.8, 'known_pros': ['Nano IPS display with 1ms GtG speed', '180Hz overclocked smooth motion', 'VESA DisplayHDR 400 certified'], 'known_cons': ['Contrast ratio is mediocre (1000:1)', 'HDR brightness is basic'], 'known_issues': ['IPS glow in dark room viewing'], 'image_url': 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500&q=80', 'base_price': 399.0, 'configs': [{'size': 27.0, 'res': 1440, 'refresh': 180, 'panel_score': 8.8, 'color_accuracy_delta_e': 1.5, 'response_time_ms': 1.0, 'panel_type': 'Nano IPS', 'price_adjust': 0.0}]}, {'name': 'Samsung ViewFinity S8 4K', 'brand': 'Samsung', 'monitor_type': 'design', 'manufacturer': 'Samsung', 'model_number': 'S27B800', 'build_score': 8.6, 'known_pros': ['Matte display finish eliminates glare', 'USB-C with 90W power delivery charge', '98% DCI-P3 wide color gamut'], 'known_cons': ['Refresh rate capped at 60Hz', 'Plastic stand base takes up desk space'], 'known_issues': ['USB hub turns off in deep standby'], 'image_url': 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500&q=80', 'base_price': 499.0, 'configs': [{'size': 27.0, 'res': 2160, 'refresh': 60, 'panel_score': 9.0, 'color_accuracy_delta_e': 0.9, 'response_time_ms': 5.0, 'panel_type': 'IPS', 'price_adjust': 0.0}]},
+
             {
                 "name": "AOC 24G2",
                 "brand": "AOC",
@@ -1052,13 +1055,31 @@ async def seed_database():
                 sku = f"{base['brand'].lower()}-{base['name'].lower().replace(' ', '-')}-{ram}-{stor}-{idx}"
                 name = f"{base['name']} ({ram}GB RAM, {stor}GB SSD)"
 
+                v_key = f"{ram}GB-{stor}GB-{cpu}"
+                img_url = specs.get("image_url")
                 products.append(Product(
                     sku=sku,
                     name=name,
                     category="laptop",
                     price_inr=price,
                     specs=specs,
-                    is_active=True
+                    is_active=True,
+                    brand=base["brand"],
+                    product_family=base["name"],
+                    model=base["name"],
+                    variant_key=v_key,
+                    source_type="real_seed",
+                    source_reference="Seed Catalog v2.0",
+                    identity_verified=True,
+                    spec_verified=False,
+                    image_verified=False,
+                    price_verified=False,
+                    verification_status="partially_verified",
+                    confidence_level=0.75,
+                    spec_coverage=0.85,
+                    image_url=img_url,
+                    image_match_level="verified_exact_model" if base["brand"] in ["Apple", "Dell", "HP", "Lenovo"] else "verified_product_family",
+                    ingestion_status="recommendation_eligible"
                 ))
 
         # Process and save Smartphones
@@ -1099,13 +1120,31 @@ async def seed_database():
                 sku = f"{base['brand'].lower()}-{base['name'].lower().replace(' ', '-')}-{ram}-{stor}-{idx}"
                 name = f"{base['name']} ({ram}GB RAM, {stor}GB Storage)"
 
+                v_key = f"{ram}GB-{stor}GB"
+                img_url = specs.get("image_url")
                 products.append(Product(
                     sku=sku,
                     name=name,
                     category="smartphone",
                     price_inr=price,
                     specs=specs,
-                    is_active=True
+                    is_active=True,
+                    brand=base["brand"],
+                    product_family=base["name"],
+                    model=base["name"],
+                    variant_key=v_key,
+                    source_type="real_seed",
+                    source_reference="Seed Catalog v2.0",
+                    identity_verified=True,
+                    spec_verified=False,
+                    image_verified=False,
+                    price_verified=False,
+                    verification_status="partially_verified",
+                    confidence_level=0.75,
+                    spec_coverage=0.85,
+                    image_url=img_url,
+                    image_match_level="verified_exact_model" if base["brand"] in ["Apple", "Samsung", "Google"] else "verified_product_family",
+                    ingestion_status="recommendation_eligible"
                 ))
 
         # Process and save Monitors
@@ -1148,13 +1187,31 @@ async def seed_database():
                 sku = f"{base['brand'].lower()}-{base['name'].lower().replace(' ', '-')}-{int(size)}-{res}-{refresh}-{idx}"
                 name = f"{base['name']} {int(size)}\" ({res}p, {refresh}Hz)"
 
+                v_key = f"{int(size)}in-{res}p-{refresh}Hz-{panel}"
+                img_url = specs.get("image_url")
                 products.append(Product(
                     sku=sku,
                     name=name,
                     category="monitor",
                     price_inr=price,
                     specs=specs,
-                    is_active=True
+                    is_active=True,
+                    brand=base["brand"],
+                    product_family=base["name"],
+                    model=base["name"],
+                    variant_key=v_key,
+                    source_type="real_seed",
+                    source_reference="Seed Catalog v2.0",
+                    identity_verified=True,
+                    spec_verified=False,
+                    image_verified=False,
+                    price_verified=False,
+                    verification_status="partially_verified",
+                    confidence_level=0.75,
+                    spec_coverage=0.85,
+                    image_url=img_url,
+                    image_match_level="verified_product_family",
+                    ingestion_status="recommendation_eligible"
                 ))
 
         # =====================================================================
@@ -1230,13 +1287,31 @@ async def seed_database():
             sku = f"{base['brand'].lower()}-{base['name'].lower().replace(' ', '-')}-{ram}-{stor}-proc-{i}"
             name = f"{base['name']} ({ram}GB RAM, {stor}GB SSD, {cpu}) - {color}"
 
+            v_key = f"{ram}GB-{stor}GB-{cpu}-syn-{i}"
+            img_url = specs.get("image_url")
             products.append(Product(
                 sku=sku,
                 name=name,
                 category="laptop",
                 price_inr=price,
                 specs=specs,
-                is_active=True
+                is_active=True,
+                brand=base["brand"],
+                product_family=base["name"],
+                model=base["name"],
+                variant_key=v_key,
+                source_type="synthetic",
+                source_reference="Procedural Benchmark Catalog",
+                identity_verified=False,
+                spec_verified=False,
+                image_verified=False,
+                price_verified=False,
+                verification_status="unverified",
+                confidence_level=0.50,
+                spec_coverage=0.60,
+                image_url=img_url,
+                image_match_level="unverified",
+                ingestion_status="recommendation_eligible"
             ))
 
         # B. Procedurally generate 15,000 Smartphones (Real configs only)
@@ -1285,13 +1360,31 @@ async def seed_database():
             sku = f"{base['brand'].lower()}-{base['name'].lower().replace(' ', '-')}-{ram}-{stor}-proc-{i}"
             name = f"{base['name']} ({ram}GB RAM, {stor}GB Storage) - {color}"
 
+            v_key = f"{ram}GB-{stor}GB-syn-{i}"
+            img_url = specs.get("image_url")
             products.append(Product(
                 sku=sku,
                 name=name,
                 category="smartphone",
                 price_inr=price,
                 specs=specs,
-                is_active=True
+                is_active=True,
+                brand=base["brand"],
+                product_family=base["name"],
+                model=base["name"],
+                variant_key=v_key,
+                source_type="synthetic",
+                source_reference="Procedural Benchmark Catalog",
+                identity_verified=False,
+                spec_verified=False,
+                image_verified=False,
+                price_verified=False,
+                verification_status="unverified",
+                confidence_level=0.50,
+                spec_coverage=0.60,
+                image_url=img_url,
+                image_match_level="unverified",
+                ingestion_status="recommendation_eligible"
             ))
 
         # C. Procedurally generate 10,000 Monitors (Real configs only)
@@ -1341,13 +1434,31 @@ async def seed_database():
             sku = f"{base['brand'].lower()}-{base['name'].lower().replace(' ', '-')}-{int(size)}-{res}-{refresh}-proc-{i}"
             name = f"{base['name']} {int(size)}\" ({res}p, {refresh}Hz, {panel})"
 
+            v_key = f"{int(size)}in-{res}p-{refresh}Hz-syn-{i}"
+            img_url = specs.get("image_url")
             products.append(Product(
                 sku=sku,
                 name=name,
                 category="monitor",
                 price_inr=price,
                 specs=specs,
-                is_active=True
+                is_active=True,
+                brand=base["brand"],
+                product_family=base["name"],
+                model=base["name"],
+                variant_key=v_key,
+                source_type="synthetic",
+                source_reference="Procedural Benchmark Catalog",
+                identity_verified=False,
+                spec_verified=False,
+                image_verified=False,
+                price_verified=False,
+                verification_status="unverified",
+                confidence_level=0.50,
+                spec_coverage=0.60,
+                image_url=img_url,
+                image_match_level="unverified",
+                ingestion_status="recommendation_eligible"
             ))
 
         # D. Bulk insert in chunks of 5,000 for maximum database efficiency
