@@ -2433,6 +2433,7 @@ async def seed_database():
         "phone_type": "flagship",
         "manufacturer": "OnePlus",
         "model_number": "CPH2573",
+        "image_url": "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=500&q=80",
         "base_price": 662.8,
         "configs": [
             {

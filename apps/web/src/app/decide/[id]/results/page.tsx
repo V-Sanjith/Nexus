@@ -453,8 +453,8 @@ export default function ResultsPage() {
   };
 
   // Helper to render product image with exact provenance & neutral fallback
-  const renderProductImage = (name: string, category: string, specs: any) => {
-    const imgUrl = specs?.image_url;
+  const renderProductImage = (name: string, category: string, productObj: any) => {
+    const imgUrl = productObj?.image_url || productObj?.specs?.image_url;
     const isIphonePhoto = typeof imgUrl === "string" && imgUrl.includes("photo-1511707171634");
     const isAppleProduct = typeof name === "string" && (name.toLowerCase().includes("iphone") || name.toLowerCase().includes("apple"));
     const isBrandMismatch = isIphonePhoto && !isAppleProduct;
@@ -485,8 +485,8 @@ export default function ResultsPage() {
     const getFilterCount = (filterName: string) => recommendation?.decision_trace?.pipeline_trace?.find((t: any) => t.name === "Hard Filters")?.details?.[filterName] || 0;
     
     // Fallbacks just in case the trace is missing these specific nodes, to avoid 0 counts
-    const loadedCount = getStageCount("Catalog Loading") || 15248;
-    const budgetCount = getFilterCount("Budget") || 843;
+    const loadedCount = getStageCount("Catalog Loading") || 195;
+    const budgetCount = getFilterCount("Budget") || 120;
     const rankedCount = recommendation?.decision_trace?.ranking?.length || 10;
 
     // 7-step decision-oriented loading sequence
@@ -793,7 +793,7 @@ export default function ResultsPage() {
                       <span>BEST MATCH</span>
                     </div>
 
-                    {renderProductImage(p!.name, recommendation.decision_trace?.category_config?.category || "laptop", specMap)}
+                    {renderProductImage(p!.name, recommendation.decision_trace?.category_config?.category || "laptop", p)}
                   </div>
                 </div>
 
@@ -818,7 +818,7 @@ export default function ResultsPage() {
                       {/* Metric blocks: Suitability & Reliability */}
                       <div className="flex gap-3 mt-2 sm:mt-0">
                         <div className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-center flex flex-col justify-center">
-                          <span className="text-[8px] uppercase font-bold text-slate-500">MCDA Match</span>
+                          <span className="text-[8px] uppercase font-bold text-slate-500">Suitability Match</span>
                           <span className="text-sm font-black text-white">{Math.round(recommendation.score || 85)}%</span>
                         </div>
                         {recommendation.reliability_score && (
@@ -875,7 +875,7 @@ export default function ResultsPage() {
                         <div className="flex flex-wrap gap-2.5 mb-6 relative z-20">
                           {recommendation.use_case_rank && (
                             <span className="text-xs font-semibold bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-3 py-1.5 rounded-full flex items-center gap-1">
-                              🏆 {recommendation.use_case_rank.name && recommendation.use_case_rank.name.toLowerCase() !== "nan" ? recommendation.use_case_rank.name : "General"} Rank: #{recommendation.use_case_rank.rank} / {recommendation.use_case_rank.total}
+                              🏆 #1 Match for {recommendation.use_case_rank.name && recommendation.use_case_rank.name.toLowerCase() !== "nan" ? recommendation.use_case_rank.name : "Your Preferences"}
                             </span>
                           )}
                           {userBudget && (

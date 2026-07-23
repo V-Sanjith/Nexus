@@ -232,11 +232,24 @@ class ExplanationBuilder:
         # 6. Normal recommendation path
         local_price_val = price_val
         
+        import re
+        def normalize_spec_text(text: str) -> str:
+            if not text: return text
+            replacements = [
+                ("2k", "2K"), ("4k", "4K"), ("120hz", "120Hz"), ("144hz", "144Hz"), ("165hz", "165Hz"), ("240hz", "240Hz"), ("360hz", "360Hz"), ("60hz", "60Hz"),
+                ("snapdragon 8 gen 3", "Snapdragon 8 Gen 3"), ("snapdragon 8 gen 2", "Snapdragon 8 Gen 2"),
+                ("5400mah", "5400mAh"), ("5000mah", "5000mAh"), ("4500mah", "4500mAh"), ("100w", "100W"), ("65w", "65W"), ("80w", "80W")
+            ]
+            res = text
+            for old_val, new_val in replacements:
+                res = re.sub(r'\b' + re.escape(old_val) + r'\b', new_val, res, flags=re.IGNORECASE)
+            return res
+
         # Humanize the top pros for the summary
         pros_summary_str = ""
         if len(pros) > 0:
             # Clean up descriptions for inline reading
-            clean_pros = [p.split(" (scored")[0].lower() for p in pros]
+            clean_pros = [normalize_spec_text(p.split(" (scored")[0].lower()) for p in pros]
             if len(clean_pros) == 1:
                 pros_summary_str = f" due to its {clean_pros[0]}"
             elif len(clean_pros) > 1:
@@ -244,7 +257,7 @@ class ExplanationBuilder:
 
         summary = (
             f"Based on your preferences, the {winner.product.name} is your best overall match. "
-            f"Priced at {currency_symbol}{local_price_val:,.0f}, it satisfies all your critical constraints{pros_summary_str}."
+            f"Priced at {currency_symbol}{int(round(local_price_val)):,}, it satisfies all your critical constraints{pros_summary_str}."
         )
 
         persona = trace.get("applied_persona", "general").title()

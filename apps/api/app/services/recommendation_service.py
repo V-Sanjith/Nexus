@@ -1681,6 +1681,9 @@ class RecommendationService:
         else:
             reliability_reasons.append(f"{matched_cnt} eligible candidates ({distinct_models_count} distinct models) analyzed")
 
+        if winner.score < 0.50:
+            reliability_reasons.append("This is the strongest available option, but it is not a close match to all your preferences.")
+
         # Price verification and freshness attribution
         if winner.product.price_verified:
             reliability_reasons.append("Verified fresh INR market price")
@@ -1889,14 +1892,35 @@ class RecommendationService:
         }
         structured_analysis["full_audit_trace"] = full_audit_trace
 
-        # Format verdict_product for response
+        # Model-Level Image Inheritance
+        winner_img_url = winner.product.image_url
+        winner_img_match = winner.product.image_match_level
+        winner_img_verified = winner.product.image_verified
+
+        if not winner_img_url and winner.product.model:
+            stmt_img = select(Product.image_url, Product.image_match_level, Product.image_verified).where(
+                Product.model == winner.product.model,
+                Product.image_url.isnot(None),
+                Product.image_url != ""
+            ).limit(1)
+            img_res = await self.session.execute(stmt_img)
+            fallback_img = img_res.first()
+            if fallback_img:
+                winner_img_url, winner_img_match, winner_img_verified = fallback_img[0], fallback_img[1], True
+
         verdict_product_data = {
             "id": str(winner.product.id),
             "sku": winner.product.sku,
             "name": winner.product.name,
             "category": winner.product.category,
+            "brand": winner.product.brand,
+            "model": winner.product.model,
             "price_inr": float(winner.product.price_inr),
             "specs": winner.product.specs,
+            "image_url": winner_img_url,
+            "image_match_level": winner_img_match,
+            "image_verified": winner_img_verified,
+            "source_type": winner.product.source_type,
             "created_at": winner.product.created_at.isoformat() if winner.product.created_at else None
         }
 
