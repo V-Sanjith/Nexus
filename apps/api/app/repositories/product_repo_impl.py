@@ -51,52 +51,24 @@ class SQLAlchemyProductRepository(IProductRepository):
         )
         if getattr(settings, "CATALOG_MODE", "production").lower() == "production":
             stmt = stmt.where(Product.source_type.in_(["real_seed", "web_enrichment_verified", "manual_verified", "manual"]))
-        if subtype and subtype != "general":
-            db_subtype = subtype
+        
+        # STRUCTURAL FORM FACTOR SUBTYPES ONLY (e.g. 2-in-1, foldable, ultrawide)
+        # Personas/Use Cases (gaming, business, creator, programming, camera, etc.) do NOT restrict retrieval; they are scored in MCDA.
+        STRUCTURAL_SUBTYPES = {"2-in-1", "convertible", "foldable", "flip", "ultrawide", "curved"}
+        if subtype and subtype.lower() in STRUCTURAL_SUBTYPES:
             if category == "laptop":
-                if subtype == "programming":
-                    db_subtype = "developer"
-                subtype_key = "laptop_type"
+                stmt = stmt.where(Product.specs["form_factor"].as_string() == subtype.lower())
             elif category == "smartphone":
-                subtype_key = "phone_type"
+                stmt = stmt.where(Product.specs["form_factor"].as_string() == subtype.lower())
             elif category == "monitor":
-                if subtype == "designer" or subtype == "productivity":
-                    db_subtype = "design"
-                subtype_key = "monitor_type"
-            else:
-                subtype_key = None
+                stmt = stmt.where(Product.specs["screen_type"].as_string() == subtype.lower())
 
-            if subtype_key:
-                if category == "smartphone":
-                    stmt = stmt.where(Product.specs[subtype_key].as_string().in_([db_subtype, "flagship"]))
-                elif category == "laptop":
-                    stmt = stmt.where(Product.specs[subtype_key].as_string().in_([db_subtype, "premium"]))
-                else:
-                    stmt = stmt.where(Product.specs[subtype_key].as_string() == db_subtype)
         stmt = stmt.offset(skip)
         if limit is not None:
             stmt = stmt.limit(limit)
             
         result = await self.session.execute(stmt)
-        candidates = list(result.scalars().all())
-
-        # Subtype Over-Filtering Protection: If exact subtype filter yields < 3 candidates, fallback to loading full category pool for MCDA scoring
-        if subtype and len(candidates) < 3:
-            fallback_stmt = select(Product).where(
-                Product.category == category, 
-                Product.is_active == True,
-                Product.ingestion_status == "recommendation_eligible"
-            )
-            if getattr(settings, "CATALOG_MODE", "production").lower() == "production":
-                fallback_stmt = fallback_stmt.where(Product.source_type.in_(["real_seed", "web_enrichment_verified", "manual_verified", "manual"]))
-            fallback_stmt = fallback_stmt.offset(skip)
-            if limit is not None:
-                fallback_stmt = fallback_stmt.limit(limit)
-            
-            fb_result = await self.session.execute(fallback_stmt)
-            candidates = list(fb_result.scalars().all())
-
-        return candidates
+        return list(result.scalars().all())
 
     async def query_specs(self, category: str, query_filters: dict) -> List[Product]:
         # Basic raw matching query: filters out active products matching criteria
