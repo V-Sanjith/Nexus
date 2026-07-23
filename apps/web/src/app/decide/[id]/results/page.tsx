@@ -185,11 +185,15 @@ export default function ResultsPage() {
       console.warn("Stateful recommendation failed, attempting stateless fallback...", err);
       
       // Try to load cached session and answers from localStorage
+      const NEXUS_CACHE_VERSION = "v2.0_prod_schema";
       const cached = localStorage.getItem(`nexus_decision_${id}`);
       if (cached) {
         try {
           const cachedData = JSON.parse(cached);
-          if (cachedData.answers && cachedData.answers.length > 0) {
+          if (cachedData._cache_version !== NEXUS_CACHE_VERSION) {
+            console.warn("Discarding stale decision payload version:", cachedData._cache_version);
+            localStorage.removeItem(`nexus_decision_${id}`);
+          } else if (cachedData.answers && cachedData.answers.length > 0) {
             toast.info("Database session expired. Computing recommendations locally...");
             
             const statelessResponse = await fetch(`${env.NEXT_PUBLIC_API_URL}/api/decisions/recommend-stateless`, {

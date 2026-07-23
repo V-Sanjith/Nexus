@@ -52,8 +52,10 @@ export default function DecidePage() {
       setCurrency(data.currency || "usd");
       setCategory(data.category || "laptop");
 
+      const NEXUS_CACHE_VERSION = "v2.0_prod_schema";
       // Save to localStorage for stateless fallback
       localStorage.setItem(`nexus_decision_${id}`, JSON.stringify({
+        _cache_version: NEXUS_CACHE_VERSION,
         id: data.id,
         title: data.title,
         category: data.category,
@@ -79,14 +81,24 @@ export default function DecidePage() {
       setLoading(false);
     } catch (err: any) {
       // Fallback to localStorage if available
+      const NEXUS_CACHE_VERSION = "v2.0_prod_schema";
       const cached = localStorage.getItem(`nexus_decision_${id}`);
       if (cached) {
         try {
           const data = JSON.parse(cached);
-          setDecisionTitle(data.title);
-          setQuestions(data.questions);
-          setCurrency(data.currency || "usd");
-          setCategory(data.category || "laptop");
+          if (data._cache_version !== NEXUS_CACHE_VERSION) {
+            console.warn("Invalidating stale decision cache version:", data._cache_version);
+            localStorage.removeItem(`nexus_decision_${id}`);
+          } else {
+            setDecisionTitle(data.title);
+            setQuestions(data.questions);
+            setCurrency(data.currency || "usd");
+            setCategory(data.category || "laptop");
+          }
+        } catch (e) {
+          localStorage.removeItem(`nexus_decision_${id}`);
+        }
+      }
           
           const initialAnswers: Record<string, any> = {};
           data.questions.forEach((q: Question) => {
