@@ -185,6 +185,136 @@ async def seed_database():
         # =====================================================================
         base_laptops = [
     {
+        "name": "Lenovo V15 Ryzen 5",
+        "brand": "Lenovo",
+        "laptop_type": "student",
+        "manufacturer": "Lenovo",
+        "model_number": "82YU00W3IN",
+        "operating_system": "Windows 11 Home",
+        "gpu_type": "integrated",
+        "cooling_score": 7.5,
+        "panel_type": "TN",
+        "brightness_nits": 250,
+        "srgb_coverage": 60.0,
+        "adobe_rgb_coverage": 40.0,
+        "dci_p3_coverage": 40.0,
+        "color_accuracy_delta_e": 3.3,
+        "battery_capacity_wh": 38.0,
+        "weight_kg": 1.65,
+        "upgradeability": {
+            "ram": False,
+            "ssd": True
+        },
+        "repairability_score": 8.0,
+        "known_pros": [
+            "Ryzen 5 7520U quad-core speed under \u20b940k",
+            "Full numeric keypad"
+        ],
+        "known_cons": [
+            "TN panel"
+        ],
+        "known_issues": [],
+        "image_url": "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=500&q=80",
+        "base_price": 377.3,
+        "configs": [
+            {
+                "ram": 8,
+                "storage": 512,
+                "cpu": "AMD Ryzen 5 7520U",
+                "gpu": "amd radeon 610m",
+                "refresh": 60,
+                "price_adjust": 0.0
+            }
+        ]
+    },
+    {
+        "name": "Acer Aspire 5 Gaming RTX 2050",
+        "brand": "Acer",
+        "laptop_type": "gaming",
+        "manufacturer": "Acer",
+        "model_number": "A515-57G",
+        "operating_system": "Windows 11 Home",
+        "gpu_type": "dedicated",
+        "cooling_score": 8.0,
+        "panel_type": "IPS",
+        "brightness_nits": 250,
+        "srgb_coverage": 65.0,
+        "adobe_rgb_coverage": 45.0,
+        "dci_p3_coverage": 45.0,
+        "color_accuracy_delta_e": 2.8,
+        "battery_capacity_wh": 50.0,
+        "weight_kg": 1.8,
+        "upgradeability": {
+            "ram": True,
+            "ssd": True
+        },
+        "repairability_score": 8.2,
+        "known_pros": [
+            "NVIDIA RTX 2050 dedicated graphics under \u20b945,000",
+            "12th Gen Core i5 12-core"
+        ],
+        "known_cons": [
+            "50Wh battery"
+        ],
+        "known_issues": [],
+        "image_url": "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=500&q=80",
+        "base_price": 458.9,
+        "configs": [
+            {
+                "ram": 8,
+                "storage": 512,
+                "cpu": "Intel Core i5-12450H",
+                "gpu": "nvidia rtx 2050",
+                "refresh": 60,
+                "price_adjust": 0.0
+            }
+        ]
+    },
+    {
+        "name": "HP Victus 15 Ryzen 5",
+        "brand": "HP",
+        "laptop_type": "gaming",
+        "manufacturer": "HP",
+        "model_number": "15-fb0150AX",
+        "operating_system": "Windows 11 Home",
+        "gpu_type": "dedicated",
+        "cooling_score": 8.2,
+        "panel_type": "IPS",
+        "brightness_nits": 250,
+        "srgb_coverage": 65.0,
+        "adobe_rgb_coverage": 45.0,
+        "dci_p3_coverage": 45.0,
+        "color_accuracy_delta_e": 2.7,
+        "battery_capacity_wh": 52.5,
+        "weight_kg": 2.29,
+        "upgradeability": {
+            "ram": True,
+            "ssd": True
+        },
+        "repairability_score": 8.0,
+        "known_pros": [
+            "AMD Ryzen 5 5600H 6-core",
+            "144Hz high refresh display",
+            "Dual-fan cooling system"
+        ],
+        "known_cons": [
+            "Slight screen wobble"
+        ],
+        "known_issues": [],
+        "image_url": "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=500&q=80",
+        "base_price": 509.9,
+        "configs": [
+            {
+                "ram": 8,
+                "storage": 512,
+                "cpu": "AMD Ryzen 5 5600H",
+                "gpu": "nvidia rtx 2050",
+                "refresh": 144,
+                "price_adjust": 0.0
+            }
+        ]
+    },
+    {
         "name": "Apple MacBook Air M3 13",
         "brand": "Apple",
         "laptop_type": "creator",
@@ -2218,6 +2348,46 @@ async def seed_database():
         # =====================================================================
         base_smartphones = [
     {
+        "name": "Poco C65",
+        "brand": "POCO",
+        "phone_type": "budget",
+        "manufacturer": "Xiaomi",
+        "model_number": "2310FPCA4I",
+        "base_price": 71.3,
+        "configs": [
+            {
+                "ram": 4,
+                "storage": 128,
+                "processor": "MediaTek Helio G85",
+                "processor_score": 3800,
+                "camera_mp": 50.0,
+                "battery_mah": 5000,
+                "screen_size": 6.74,
+                "price_adjust": 0.0
+            }
+        ]
+    },
+    {
+        "name": "Redmi A3",
+        "brand": "Xiaomi",
+        "phone_type": "budget",
+        "manufacturer": "Xiaomi",
+        "model_number": "23129RN51I",
+        "base_price": 71.3,
+        "configs": [
+            {
+                "ram": 3,
+                "storage": 64,
+                "processor": "MediaTek Helio G36",
+                "processor_score": 3200,
+                "camera_mp": 8.0,
+                "battery_mah": 5000,
+                "screen_size": 6.71,
+                "price_adjust": 0.0
+            }
+        ]
+    },
+    {
         "name": "Apple iPhone 15 Pro",
         "brand": "Apple",
         "phone_type": "flagship",
@@ -3581,6 +3751,146 @@ async def seed_database():
         # 3. MONITORS DEFINITIONS (7 Realistic models)
         # =====================================================================
         base_monitors = [
+    {
+        "name": "Acer Nitro QG221Q",
+        "brand": "Acer",
+        "monitor_type": "budget",
+        "manufacturer": "Acer",
+        "model_number": "QG221Q",
+        "base_price": 56.1,
+        "configs": [
+            {
+                "size": 21.5,
+                "res": 1080,
+                "refresh": 100,
+                "panel_score": 7.3,
+                "color_accuracy_delta_e": 2.4,
+                "response_time_ms": 1.0,
+                "panel_type": "VA",
+                "price_adjust": 0.0
+            }
+        ]
+    },
+    {
+        "name": "BenQ GW2283",
+        "brand": "BenQ",
+        "monitor_type": "budget",
+        "manufacturer": "BenQ",
+        "model_number": "GW2283",
+        "base_price": 71.4,
+        "configs": [
+            {
+                "size": 21.5,
+                "res": 1080,
+                "refresh": 60,
+                "panel_score": 7.5,
+                "color_accuracy_delta_e": 2.2,
+                "response_time_ms": 5.0,
+                "panel_type": "IPS",
+                "price_adjust": 0.0
+            }
+        ]
+    },
+    {
+        "name": "LG 22MP410-B",
+        "brand": "LG",
+        "monitor_type": "budget",
+        "manufacturer": "LG",
+        "model_number": "22MP410-B",
+        "base_price": 66.3,
+        "configs": [
+            {
+                "size": 21.5,
+                "res": 1080,
+                "refresh": 75,
+                "panel_score": 7.2,
+                "color_accuracy_delta_e": 2.5,
+                "response_time_ms": 5.0,
+                "panel_type": "VA",
+                "price_adjust": 0.0
+            }
+        ]
+    },
+    {
+        "name": "ViewSonic VA2409m",
+        "brand": "ViewSonic",
+        "monitor_type": "budget",
+        "manufacturer": "ViewSonic",
+        "model_number": "VA2409m",
+        "base_price": 74.5,
+        "configs": [
+            {
+                "size": 23.8,
+                "res": 1080,
+                "refresh": 100,
+                "panel_score": 7.6,
+                "color_accuracy_delta_e": 2.1,
+                "response_time_ms": 4.0,
+                "panel_type": "IPS",
+                "price_adjust": 0.0
+            }
+        ]
+    },
+    {
+        "name": "MSI PRO MP273",
+        "brand": "MSI",
+        "monitor_type": "programming",
+        "manufacturer": "MSI",
+        "model_number": "MP273",
+        "base_price": 102.0,
+        "configs": [
+            {
+                "size": 27.0,
+                "res": 1080,
+                "refresh": 75,
+                "panel_score": 8.1,
+                "color_accuracy_delta_e": 1.9,
+                "response_time_ms": 5.0,
+                "panel_type": "IPS",
+                "price_adjust": 0.0
+            }
+        ]
+    },
+    {
+        "name": "Samsung Smart Monitor M7 4K",
+        "brand": "Samsung",
+        "monitor_type": "highres",
+        "manufacturer": "Samsung",
+        "model_number": "LS32BM700",
+        "base_price": 255.0,
+        "configs": [
+            {
+                "size": 32.0,
+                "res": 2160,
+                "refresh": 60,
+                "panel_score": 9.0,
+                "color_accuracy_delta_e": 1.3,
+                "response_time_ms": 4.0,
+                "panel_type": "VA",
+                "price_adjust": 0.0
+            }
+        ]
+    },
+    {
+        "name": "Dell S2722QC 4K USB-C",
+        "brand": "Dell",
+        "monitor_type": "highres",
+        "manufacturer": "Dell",
+        "model_number": "S2722QC",
+        "base_price": 306.0,
+        "configs": [
+            {
+                "size": 27.0,
+                "res": 2160,
+                "refresh": 60,
+                "panel_score": 9.3,
+                "color_accuracy_delta_e": 1.0,
+                "response_time_ms": 4.0,
+                "panel_type": "IPS",
+                "price_adjust": 0.0
+            }
+        ]
+    },
     {
         "name": "Dell P2422H 24-inch",
         "brand": "Dell",

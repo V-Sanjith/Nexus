@@ -1680,6 +1680,12 @@ class RecommendationService:
             reliability_reasons.append("Limited catalog coverage for these requirements")
         else:
             reliability_reasons.append(f"{matched_cnt} eligible candidates ({distinct_models_count} distinct models) analyzed")
+
+        # Price verification and freshness attribution
+        if winner.product.price_verified:
+            reliability_reasons.append("Verified fresh INR market price")
+        else:
+            reliability_reasons.append("Unverified estimated INR MSRP")
         
         if distinct_models_count >= 2 and len(scored_results) >= 2:
             margin = winner.score - scored_results[1].score
