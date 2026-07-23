@@ -710,7 +710,7 @@ async def seed_database():
                 "known_pros": ["Premium metal unibody chassis design", "Exceptional 80W rapid charging speeds", "Bright 120Hz AMOLED panel"],
                 "known_cons": ["Pre-installed bloatware apps", "Average low-light camera photos"],
                 "known_issues": ["Metal back conducts heat quickly under gaming"],
-                "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80",
+                "image_url": "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=500&q=80",
                 "base_price": 285.70,
                 "configs": [
                     {"ram": 8, "storage": 128, "processor": "Snapdragon 7+ Gen 3", "processor_score": 8200, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.74, "price_adjust": -29.0}, # approx ₹34,300 (< ₹35k!)
@@ -779,7 +779,7 @@ async def seed_database():
                 "known_pros": ["Superb Snapdragon 8s Gen 3 performance", "Gorgeous 1.5K flat AMOLED display", "Extremely fast 100W charging"],
                 "known_cons": ["Plastic frame feels less premium than Nord 4 metal", "No headphone jack"],
                 "known_issues": ["Aggressive RAM management in background"],
-                "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80",
+                "image_url": "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=500&q=80",
                 "base_price": 336.70,
                 "configs": [
                     {"ram": 8, "storage": 256, "processor": "Snapdragon 8s Gen 3", "processor_score": 8500, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.74, "price_adjust": -20.0}, # approx ₹31,036
@@ -797,7 +797,7 @@ async def seed_database():
                 "known_pros": ["Superb Snapdragon 8s Gen 4 performance", "Gorgeous 1.5K flat AMOLED display", "Extremely fast 100W charging"],
                 "known_cons": ["Plastic frame feels less premium than Nord 4 metal", "No headphone jack"],
                 "known_issues": ["Aggressive RAM management in background"],
-                "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80",
+                "image_url": "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=500&q=80",
                 "base_price": 346.90,
                 "configs": [
                     {"ram": 8, "storage": 256, "processor": "Snapdragon 8s Gen 4", "processor_score": 8700, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.74, "price_adjust": -30.0}, # approx ₹31,056
@@ -815,7 +815,7 @@ async def seed_database():
                 "known_pros": ["Flagship-grade Snapdragon 8 Gen 2 power", "Superb 144Hz gaming refresh rate", "Very fast 120W charging"],
                 "known_cons": ["Funtouch OS has pre-installed apps", "Plastic frame design"],
                 "known_issues": ["Slight warming near the camera module during extended gaming"],
-                "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80",
+                "image_url": "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=500&q=80",
                 "base_price": 357.10,
                 "configs": [
                     {"ram": 8, "storage": 128, "processor": "Snapdragon 8 Gen 2", "processor_score": 8900, "camera_mp": 50.0, "battery_mah": 5160, "screen_size": 6.78, "price_adjust": -20.0}, # approx ₹33,035
@@ -833,7 +833,7 @@ async def seed_database():
                 "known_pros": ["Outstanding performance value Snapdragon 8s Gen 3", "Lighter weight and comfortable hold", "90W fast charging support"],
                 "known_cons": ["Average battery longevity under gaming", "HyperOS has bloatware"],
                 "known_issues": ["Slight thermal throttling under sustained heavy stress tests"],
-                "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80",
+                "image_url": "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=500&q=80",
                 "base_price": 306.10,
                 "configs": [
                     {"ram": 8, "storage": 256, "processor": "Snapdragon 8s Gen 3", "processor_score": 8600, "camera_mp": 50.0, "battery_mah": 5000, "screen_size": 6.67, "price_adjust": 0.0},  # approx ₹29,997
@@ -850,7 +850,7 @@ async def seed_database():
                 "known_pros": ["Brightest 6000 nits LTPO AMOLED display", "Extremely long-lasting 5500mAh battery", "120W charging speed"],
                 "known_cons": ["Camera setup lacks a telephoto lens", "Glossy back panel attracts fingerprints"],
                 "known_issues": ["Auto-brightness can be slow to adjust in dim rooms"],
-                "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80",
+                "image_url": "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=500&q=80",
                 "base_price": 316.30,
                 "configs": [
                     {"ram": 8, "storage": 128, "processor": "Snapdragon 7+ Gen 3", "processor_score": 8100, "camera_mp": 50.0, "battery_mah": 5500, "screen_size": 6.78, "price_adjust": -10.0}, # approx ₹29,997
