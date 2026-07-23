@@ -1016,10 +1016,19 @@ class RecommendationService:
         """
         Runs the recommendation pipeline statelessly.
         """
-        category = payload.category.lower()
-        subcategory = payload.subcategory.lower()
-        persona = payload.persona.lower()
-        target_currency = payload.currency.lower()
+        if isinstance(payload, dict):
+            category = str(payload.get("category", "laptop")).lower()
+            subcategory = str(payload.get("subcategory", "general")).lower()
+            persona = str(payload.get("persona", "general")).lower()
+            target_currency = str(payload.get("currency", "inr")).lower()
+            raw_answers = payload.get("answers", [])
+        else:
+            category = payload.category.lower()
+            subcategory = payload.subcategory.lower()
+            persona = payload.persona.lower()
+            target_currency = payload.currency.lower()
+            raw_answers = payload.answers
+
         local_symbol = "₹" if target_currency == "inr" else "$"
 
         # Load dynamic merged configuration
@@ -1030,27 +1039,43 @@ class RecommendationService:
 
         # Match questions with answers to build answers_summary
         answers_summary = []
-        for ans in payload.answers:
-            q_id = ans.question_id
+        for ans in raw_answers:
+            if isinstance(ans, dict):
+                q_id = ans.get("question_id") or ans.get("maps_to")
+                sel_val = ans.get("selected_value")
+                maps_to_key = ans.get("maps_to")
+            else:
+                q_id = ans.question_id
+                sel_val = ans.selected_value
+                maps_to_key = getattr(ans, "maps_to", None)
+
             # Find matching question in config
             q_cfg = None
             for q in config.questions:
-                if q.order_index == q_id:
+                if q.order_index == q_id or q.maps_to == q_id or q.maps_to == maps_to_key:
                     q_cfg = q
                     break
             
             if q_cfg:
                 answers_summary.append({
-                    "question_id": str(q_id),
+                    "question_id": str(q_cfg.order_index),
                     "question_text": q_cfg.question_text,
                     "input_type": q_cfg.input_type,
-                    "selected_value": ans.selected_value,
+                    "selected_value": sel_val,
                     "question": {
                         "question_text": q_cfg.question_text,
                         "input_type": q_cfg.input_type,
                         "weight_impact": {"maps_to": q_cfg.maps_to}
                     },
                     "maps_to": q_cfg.maps_to
+                })
+            elif maps_to_key:
+                answers_summary.append({
+                    "question_id": str(q_id or "1"),
+                    "question_text": str(maps_to_key),
+                    "input_type": "budget_range" if maps_to_key == "price" else "single_choice",
+                    "selected_value": sel_val,
+                    "maps_to": maps_to_key
                 })
 
         # Query products from catalog provider
@@ -1581,22 +1606,64 @@ class RecommendationService:
         matched_cnt = funnel_metrics["constraints_passed"]
         rel_intent = 95.0
         
+        # Calculate distinct model metrics across evaluated candidates
+        candidate_models = set()
+        candidate_families = set()
+        candidate_brands = set()
+        for cand in scored_results:
+            p = cand.product
+            m_name = getattr(p, "model", None) or getattr(p, "name", "")
+            f_name = getattr(p, "product_family", None) or getattr(p, "name", "")
+            b_name = getattr(p, "brand", None) or p.specs.get("brand", "")
+            if m_name: candidate_models.add(str(m_name).lower())
+            if f_name: candidate_families.add(str(f_name).lower())
+            if b_name: candidate_brands.add(str(b_name).lower())
+
+        distinct_models_count = len(candidate_models)
+        distinct_families_count = len(candidate_families)
+        distinct_brands_count = len(candidate_brands)
+
         filled_specs = len([k for k, v in winner.product.specs.items() if v is not None])
         total_config_specs = max(1, len(config.attributes))
         rel_spec = min(100.0, (filled_specs / total_config_specs) * 100.0)
-        rel_catalog = min(100.0, 50.0 + min(50.0, matched_cnt * 2.0))
         
-        if len(scored_results) >= 2:
-            margin = winner.score - scored_results[1].score
-            rel_margin = min(100.0, 70.0 + margin * 300.0)
+        # Competitive Catalog Coverage (Model-aware, not raw SKU variants)
+        if distinct_models_count <= 0:
+            rel_catalog = 0.0
+        elif distinct_models_count == 1:
+            rel_catalog = 20.0  # Single model candidate pool
+        elif distinct_models_count == 2:
+            rel_catalog = 45.0  # Only two models to compare
+        elif distinct_models_count == 3:
+            rel_catalog = 65.0
+        elif distinct_models_count == 4:
+            rel_catalog = 80.0
         else:
-            rel_margin = 100.0
-            
+            rel_catalog = min(100.0, 80.0 + (distinct_models_count - 5) * 3.0)
+
+        # Runner-up score margin
+        if distinct_models_count >= 2 and len(scored_results) >= 2:
+            margin = winner.score - scored_results[1].score
+            rel_margin = min(100.0, 60.0 + margin * 350.0)
+        else:
+            # Low margin score if no distinct model alternative exists
+            rel_margin = 25.0
+
         present_attrs = sum(1 for attr in config.attributes if engine._get_spec_val(winner.product, attr.key) is not None)
         rel_completeness = (present_attrs / len(config.attributes)) * 100.0 if config.attributes else 100.0
         
         rel_stability_score = float(rel_stability)
-        reliability_score = round(0.20 * rel_intent + 0.15 * rel_spec + 0.15 * rel_catalog + 0.20 * rel_margin + 0.15 * rel_completeness + 0.15 * rel_stability_score, 1)
+        raw_reliability = 0.20 * rel_intent + 0.15 * rel_spec + 0.20 * rel_catalog + 0.20 * rel_margin + 0.10 * rel_completeness + 0.15 * rel_stability_score
+
+        # Apply Sparse Catalog Multiplier if distinct models are sparse
+        if distinct_models_count <= 1:
+            sparse_penalty = 0.65  # Cap single model reliability at ~45-55%
+        elif distinct_models_count == 2:
+            sparse_penalty = 0.82  # Cap 2-model reliability at ~65-75%
+        else:
+            sparse_penalty = 1.0
+
+        reliability_score = round(min(100.0, raw_reliability * sparse_penalty), 1)
         
         reliability_reasons = []
         if rel_intent >= 90:
@@ -1609,9 +1676,12 @@ class RecommendationService:
         else:
             reliability_reasons.append("Partial specifications coverage")
             
-        reliability_reasons.append(f"{matched_cnt} eligible candidates analyzed")
+        if distinct_models_count <= 1:
+            reliability_reasons.append("Limited catalog coverage for these requirements")
+        else:
+            reliability_reasons.append(f"{matched_cnt} eligible candidates ({distinct_models_count} distinct models) analyzed")
         
-        if len(scored_results) >= 2:
+        if distinct_models_count >= 2 and len(scored_results) >= 2:
             margin = winner.score - scored_results[1].score
             if margin >= 0.08:
                 reliability_reasons.append("Clear advantage over runner-up")
@@ -1620,7 +1690,7 @@ class RecommendationService:
             else:
                 reliability_reasons.append("Narrow margin over runner-up")
         else:
-            reliability_reasons.append("No other candidates found")
+            reliability_reasons.append("No distinct alternative models available")
             
         if rel_stability_score == 100.0:
             reliability_reasons.append("Recommendation is stable under priority changes")
