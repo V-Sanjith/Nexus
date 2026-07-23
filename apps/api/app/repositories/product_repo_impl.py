@@ -78,7 +78,25 @@ class SQLAlchemyProductRepository(IProductRepository):
             stmt = stmt.limit(limit)
             
         result = await self.session.execute(stmt)
-        return list(result.scalars().all())
+        candidates = list(result.scalars().all())
+
+        # Subtype Over-Filtering Protection: If exact subtype filter yields < 3 candidates, fallback to loading full category pool for MCDA scoring
+        if subtype and len(candidates) < 3:
+            fallback_stmt = select(Product).where(
+                Product.category == category, 
+                Product.is_active == True,
+                Product.ingestion_status == "recommendation_eligible"
+            )
+            if getattr(settings, "CATALOG_MODE", "production").lower() == "production":
+                fallback_stmt = fallback_stmt.where(Product.source_type.in_(["real_seed", "web_enrichment_verified", "manual_verified", "manual"]))
+            fallback_stmt = fallback_stmt.offset(skip)
+            if limit is not None:
+                fallback_stmt = fallback_stmt.limit(limit)
+            
+            fb_result = await self.session.execute(fallback_stmt)
+            candidates = list(fb_result.scalars().all())
+
+        return candidates
 
     async def query_specs(self, category: str, query_filters: dict) -> List[Product]:
         # Basic raw matching query: filters out active products matching criteria
